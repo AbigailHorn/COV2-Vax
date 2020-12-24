@@ -1,0 +1,775 @@
+---
+title: "Vaccination scenario analysis"
+subtitle: Epidemic model fit to LAC data as of `r Sys.Date()`
+author: "University of Southern California, Department of Preventive Medicine"
+output:
+  html_document:
+    css: styles.css
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r, include=FALSE, eval=FALSE}
+# NOTES TO REMEMBER
+# Both Susceptible and Recovered are vaccinated
+# Vaccine efficacy delay vx.delay stored in prior_param.R (takes hold immediately after vx.delay)
+```
+
+
+
+<!--Initialize-->
+
+``` {r setup, include=FALSE}
+
+### Install necessary packages and get started
+
+library(reshape2)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(bindata)
+library(odin)
+library(fitR)
+library(knitr)
+library(EasyABC)
+library(gridExtra)
+library(odin)
+library(lubridate)
+library(EasyABC)
+library(gridExtra)
+library(kableExtra)
+library(plyr)
+library(dplyr)
+library(data.table)
+library(scales)
+library(EasyABC)
+library(patchwork)
+
+library(tidyr)
+library(readr)
+library(purrr)
+library(tibble)
+library(stringr)
+library(forcats)
+library(network)
+library(tidygraph)
+library(ggraph)
+library(visNetwork)
+library(networkD3)
+library(ggmosaic)
+library(formattable)
+library(DT)
+library(reshape)
+library(here)
+library(fs)
+library(MASS)
+library(plotly)
+
+
+lang_output <- function(x, lang) {
+  cat(c(sprintf("```%s", lang), x, "```"), sep = "\n")
+}
+r_output <- function(x) lang_output(x, "r")
+
+knitr::opts_chunk$set(
+  fig.width = 9.5,
+  fig.height = 8,
+  eval=TRUE,
+  echo=FALSE,
+  warning=FALSE,
+  cache=FALSE,
+  message=FALSE,
+  include=TRUE
+  )
+
+code.dir=here("code/")
+data.dir=here("data/")
+result.dir = here("results/")
+fig.dir = here("figs/")
+output.dir = here("output/")
+code.paper.dir=here("code/epi_model_code")
+code.risk.dir=here("code/risk_model_code/")
+code.scenarios.dir=here("code/scenarios_code/")
+```
+
+<!--Set global options-->
+
+```{r options, include=FALSE}
+print.output <- FALSE
+days.truncate <- 0
+endDatePlotGlobal <- as.Date("2020-12-31")
+last.date.plot.Vx <- as.Date("2021-06-01")
+```
+
+
+<!--Read in epidemic model, functions, COVID data-->
+
+```{r read-in-model-supporting-functions, include=FALSE}
+
+###################################################################################################
+## LOAD EPIDEMIC MODELS
+## And compile the model
+path_seihqdr_model <- path(code.paper.dir, "stochastic_SEIAHQDR_Alphat_rt.R")
+seihqdr_generator <- odin::odin(path_seihqdr_model)
+
+path_Vx_model <- path(code.paper.dir, "stochastic_SEIAHQDR_Vx.R")
+Vx_generator <- odin::odin(path_Vx_model)
+
+
+###################################################################################################
+## LOAD DATA PROCESSING AND MODEL ESTIMATING FUNCTIONS
+model_functions <- path(code.paper.dir, "data_model_fun.R")
+source(model_functions)
+
+###################################################################################################
+## LOAD PLOTTING FUNCTIONS
+plot_code <- path(code.paper.dir, "plotting_fun_NEW.R")
+source(plot_code)
+
+###################################################################################################
+## LOAD TABLES FUNCTIONS
+tables_code <- path(code.paper.dir, "tables_fun.R")
+source(tables_code)
+
+###################################################################################################
+## COVID INPUT DATA
+# latest_data: cumulative and daily counts for "Htotcum","D","Vcum","Idetectcum","H_new","D_new"
+# no_obs: number of observation days
+latest_data <- latest_covid_data(truncate=days.truncate)
+no_obs <- nrow(latest_data)
+
+```
+
+
+<!--Model Fitting-->
+
+```{r include=FALSE}
+
+## SOURCE PRIOR PARAMETERS
+## Provides output in form of a prior.par list
+## Note: Beta(t), Alpha(t), Kappa(t), Delta(t) are read in from file
+prior_param_input <- path(code.paper.dir, "prior_param.R")
+source(prior_param_input)
+# prior.par
+
+## SUMMARY STATISTICS COMPUTED ON DATA
+summarydata <- sum.stats.SIMTEST(latest_data,include.R = FALSE)
+model.R <- model.1sim.stats.no.R  # From supporting_functions
+
+### NUMBER OF OUTPUTS
+# n_calibration = 10000
+# n_rec = 2000
+
+n_calibration = 1000
+n_rec = 100
+
+## FIT MODEL
+ABC_out<-ABC_mcmc(method="Marjoram",model=model.R,prior=prior.par,
+                       summary_stat_target=summarydata, n_calibration=n_calibration,
+                       tolerance_quantile=0.1,verbose=FALSE,progress=TRUE, n_rec=n_rec)
+
+ABC.par.out <- as.data.frame(ABC_out$param)
+ABC.out.mat <- ABC_out$param
+par.vec.length <- nrow(ABC_out$param)
+
+```
+
+
+<!--Simulate model-->
+<!--Get compartment variables over time with CI-->
+<!--Get CFR/IFR-->
+
+```{r include=FALSE}
+###################################################################################################
+## GET VACCINE EFFICACY DELAY "vx.delay" from prior_param_input
+prior_param_input <- path(code.paper.dir, "prior_param.R")
+source(prior_param_input)
+
+ABC.out.mat <- ABC_out$param
+par.vec.length <- nrow(ABC_out$param)
+iter <- 10
+time.steps <- last.date.plot.Vx - as.Date("2020-03-01") + 50
+vars.to.plot <- vars.plus.Vx
+vx.delay <- 20
+vx.coverage <- .25
+
+## FUNCTION MODEL.OUTPUT.TO.PLOT.SIM
+## Calculates mean and CI of each estimated parameter & CFR/IFR
+## Uses correlated.param.SIM
+## Reads in Beta, Alpha, Kappa, Delta from file
+traj.0 <- model.output.to.plot.SIM(ABC.out.mat=ABC.out.mat, vx.delay=vx.delay, vx.coverage = vx.coverage, par.vec.length=par.vec.length, iter=iter, time.steps=time.steps, vars.to.plot = vars.to.plot)
+
+```
+
+
+```{r include=FALSE}
+
+###################################################################################################
+## Plot all variables current date
+
+time.steps.4.plot = last.date.plot.Vx - as.Date("2020-03-01") +1
+data.in <- latest_data
+vars.to.plot <- vars.plus.Vx
+
+plot.all.variables.curr.date <- 
+plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0,  time.steps.4plot=time.steps.4.plot,
+                    vars.to.plot=vars.plus.Vx)
+
+if (print.output==TRUE){
+  pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
+  plot.all.variables.curr.date
+  dev.off()
+}
+#plot.all.variables.curr.date
+
+```
+
+# Model and parameter estimates
+
+## Estimated epidemic parameters {.tabset}
+
+```{r include=FALSE}
+
+endDatePlot <- endDatePlotGlobal
+Fig3.plots <- plot.param.t(ABC_out = ABC_out, endDatePlot=endDatePlot)
+
+if (print.output==TRUE){
+  pdf(file = path(output.dir, "plot_Rt.pdf"), width=10, height =10)
+  Fig3.plots[[1]]
+  dev.off()
+  
+  pdf(file = path(output.dir, "plot_r_t.pdf"), width=10, height =10)
+  Fig3.plots[[2]]
+  dev.off()
+  
+  pdf(file = path(output.dir, "plot_AKD_t.pdf"), width=10, height =10)
+  Fig3.plots[[3]]
+  dev.off()
+}
+
+```
+
+### Reproductive Number, $R(t)$
+
+```{r}
+Fig3.plots[[1]]
+```
+
+### Fraction of Observed Infections, $r(t)$
+
+```{r}
+Fig3.plots[[2]]
+```
+
+{-}
+
+## Model fits {.tabset}
+
+Summarizes the epidemic model fit with COVID-19 data for LAC from March 1 through `r as.Date("2020-03-01") + no_obs` for all disease states across multiple views: New cases, representing new daily incidence; the current number in a compartment at a specific date, relevant for understanding current prevalence rates and comparing with healthcare capacity limitations; and cumulative counts until a specific date. Observed data for available compartments with cases attributable to nursing home residents removed, are plotted as black dots. The figure demonstrates that good model fits are achieved in all compartments across time.
+
+* **New = new daily incidence**
+* **Current = current census in compartment** 
+* **Cumulative = running total over time**
+* Black dots depict COVID-19 data, with counts from outbreaks in nursing homes removed
+* The dashed line represents healthcare resource capacity limits
+
+```{r include=FALSE}
+
+###################################################################################################
+## Plot all variables current date
+
+last.plotting.date <- last.date.plot.Vx
+time.steps.4.plot = as.Date("2021-01-05") - as.Date("2020-03-01") +1
+data.in <- latest_data
+vars.to.plot <- vars.plus.Vx
+
+plot.all.variables.curr.date <- 
+plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot,
+                    vars.to.plot=vars.plus.Vx)
+
+if (print.output==TRUE){
+  pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
+  plot.all.variables.curr.date
+  dev.off()
+}
+#plot.all.variables.curr.date
+
+```
+
+```{r include=FALSE}
+
+###################################################################################################
+## Plot all variables plus 15 days
+
+time.steps.4.plot = as.Date(last.date.plot.Vx) - as.Date("2020-03-01") + 15
+data.in <- latest_data
+vars.to.plot <- vars.plus.Vx
+
+plot.all.variables.plus.15.days <- 
+plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot,
+                    vars.to.plot=vars.plus.Vx)
+
+if (print.output==TRUE){
+  pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
+  plot.all.variables.plus.15.days
+  dev.off()
+}
+#plot.all.variables.plus.15.days
+```
+
+### Model fits through `r Sys.Date()`
+
+```{r}
+plot.all.variables.curr.date
+```
+
+### Model **projections**
+
+Projections **under the assumption of the infectious rate as of `r Sys.Date()`** 
+
+```{r}
+plot.all.variables.plus.15.days
+```
+
+
+# Vaccination Scenarios
+
+Parameters modeled in scenarios:
+
+- R(t) implemented from 2020-12-26 on: From 0.3 to 2.8
+- Vaccination rate: slow (5,000/day initially, 10,000/day after June), expected (20,000/day), fast (50,000/day)
+- Delay between starting vaccination (2020-12-15) and starting vaccination of 65+: 10, 30, 90 days
+- Vaccine coverage rate (% final updake by population): 60%, 80%
+
+<!---
+Get Alpha Kappa Delta table
+--->
+
+```{r include=FALSE}
+###################################################################################################
+## GET MODEL OUTPUT: summary
+
+startDatePlot <- as.Date("2020-03-01")
+endDatePlot <- endDatePlotGlobal
+all_day_1s <- seq(startDatePlot,endDatePlot,by='month')
+all_day_15s <- all_day_1s+14
+date.in <- sort(c(all_day_1s,all_day_15s))
+tables.out <- summary.table.param.CFR.IFR(traj.CI=traj.0, ABC_out=ABC_out, date.in=date.in, use.mean.select = 1, round.by.in=4)
+
+```
+
+<!--- 
+Read in data
+--->
+
+```{r include=FALSE}
+###############################################################################################################
+## Read in marginal risk probability P(H|I), P(Q|H), P(D|Q) for each risk profile q, calculated by the JAM model
+## Data coming from: Guan et al. 2020, Petrilli et al. 2020
+Pr.H <- read.csv(path(data.dir, "Pr.H.csv"), sep=",", header=TRUE,row.names = 1)
+Pr.Q <- read.csv(path(data.dir, "Pr.Q.csv"), sep=",", header=TRUE,row.names = 1)
+Pr.D <- read.csv(path(data.dir, "Pr.D.csv"), sep=",", header=TRUE,row.names = 1)
+
+## Get profile matrix X.mat
+X.mat <- as.matrix(dplyr::select(Pr.H, -1))
+n_factors <- ncol(X.mat)
+n_profiles <- nrow(X.mat)
+
+#########################################################################################################
+## Read in prevalence of each risk factor p in the population for LA County
+## Data coming from:
+#### [Los Angeles County Health Survey](http://www.publichealth.lacounty.gov/ha/hasurveyintro.htm)
+#### [California Health Information Survey](http://ask.chis.ucla.edu)
+Pop.prevalence <- read.csv(path(data.dir, "Pop.prevalence.LA.csv"), sep=",", header=TRUE,row.names = 1 )
+Pop.prev.matrix<-as.matrix(Pop.prevalence)
+
+#########################################################################################################
+## Read in correlation structure, $\Sigma$, between the risk factors p
+## Correlation structure is weighted according to the prevalence of each race/ethnicity in LA County
+## Calculated using data coming from: The National Health and Nutrition Examination Survey (NHANES)
+SIGMA <- read.csv(path(data.dir, "SIGMA.csv"), sep=",", header=TRUE,row.names = 1)
+
+```
+
+<!---
+Calculate prevalence of each profile in overall LAC population
+--->
+
+```{r riskprofiles, include=FALSE, eval=TRUE}
+calc_profile_prev<- path(code.risk.dir, "calc_profile_prev.R")
+source(calc_profile_prev)
+
+## OUTPUT
+# profile.cnt.freq
+```
+
+<!---
+Estimate risk probabilities with baseline from epidemic model
+--->
+
+```{r estimate-risk-integrated}
+
+##################################################
+## INPUTS: TIMES
+### Chosen times to run analysis at
+
+t1 <- "2020-05-15"
+t2 <- "2020-12-15"
+table.dates <- c("May.15", "Dec.15")
+times <- c("t1","t2")
+times.dates <- as.Date(c(t1,t2))
+n.times <- length(times)
+
+# t2 <- "2020-07-15"
+# t3 <- "2020-09-15"
+# t4 <- "2020-10-15"
+# table.dates <- c("May.15","Jul.15","Sep.15","Oct.15")
+# times.dates <- as.Date(c(t1,t2,t3,t4))
+# times <- c("t1","t2","t3","t4")
+
+
+##################################################
+## INPUTS: OBSERVED LAC DATA ON ILLNESSES
+### Observed LAC age prevalence in (I) infections
+n.dates.LAC.obs.age <- length(times)
+freq.LAC.obs.age <- matrix(nrow=3, ncol=n.dates.LAC.obs.age)
+colnames(freq.LAC.obs.age) <- times
+rownames(freq.LAC.obs.age) <- c("Age0.19","Age20.64","Age65.")
+
+freq.LAC.obs.age[,1] <- c(0.035, 0.749, 0.216)  # May.15
+freq.LAC.obs.age[,2] <- c(0.115, 0.783, 0.102)  # Oct.15
+
+
+##################################################
+## INPUTS: EPIDEMIC MODEL
+## Get mean estimates of Alpha(t), Kappa(t), Delta(t) at each time point 
+akd_table <- tables.out[[2]]
+table1 <- akd_table
+for (i in 1:2){  table1[i,] <- akd_table[i,] %>% mutate_if(is.character, function(x) unlist(strsplit(x, " "))[1])}
+table1 <- as.data.frame(apply(table1, 2, as.numeric)) 
+rownames(table1) <- c("t1","t2")
+
+## Create extra rows representing Alpha, Kappa, Delta values for t > 2 (with same values for Alpha, Kappa, Delta as t2)
+if (n.times > 2){ 
+  for (exrow in 3:n.times) table1[exrow,] <- table1[2,] 
+  rownames(table1) <- times
+  }
+
+risk.probs.POSTERIORS <- table1
+
+##################################################
+## INPUTS: PROFILE FREQUENCY
+### Estimated frequency of each risk profile
+freq.PREV.q <- as.vector(profile.cnt.freq[,1])
+
+##################################################
+## INPUTS: JAM ESTIMATED CONDITIONAL RISK EFFECTS
+### Read in JAM produced conditional effect estimates
+psi.mat = read.csv(path(data.dir, "psi.conditional.effect.estimates.csv"), sep=",", header=TRUE,row.names = 1)
+rownames(psi.mat) <- colnames(X.mat)
+psi.mat[1,] <- c(rep(-1,times=3))
+psi.mat[4,] <- c(rep(2,times=3))
+
+##################################################
+## APPLY CODE TO GET ESTIMATE RISK PROBABILITIES WITH BASELINE FROM EPIDEMIC MODEL
+calc_integrated_risk_model<- path(code.risk.dir, "integrated_risk_model.R")
+source(calc_integrated_risk_model)
+
+# Pr.freq.FUN.out <- Pr.freq.FUN(X.mat=X.mat, freq.PREV.q = freq.PREV.q, 
+#                                freq.LAC.obs.age=freq.LAC.obs.age, logit.SEIR.est=logit.SEIR.est,psi.mat=psi.mat)
+# ### OUTPUTS
+# Pr.OUT <- Pr.freq.FUN.out[[1]]
+# freq.OUT <- Pr.freq.FUN.out[[2]]   
+
+```
+
+
+<!---
+Scenarios: Get Alpha, Kappa, Delta with populations protected
+--->
+
+```{r scenarios, include=FALSE}
+
+##################################################
+## SOURCE SCENARIOS FUNCTIONS
+scenarios_functions <- path(code.scenarios.dir, "scenarios_fun_TEST.R")
+source(scenarios_functions)
+
+heatmap_functions <- path(code.scenarios.dir, "heatmap_functions.R")
+source(heatmap_functions)
+##################################################
+## INPUTS for getting % removed for various scenarios
+
+# n.days.65.vx <- 60
+# vx.coverage.65 <- vx.coverage
+# 
+# #percent.to.remove <- c(0,0.5,1) #c(1,0.5,0) 
+# percent.to.remove <- round(seq(0,vx.coverage.65, length = n.days.65.vx),3)
+# n.protect.scenario <- length(percent.to.remove)
+# factor.to.remove <- 4  # Age.65.
+
+##################################################
+## Name the scenarios
+
+## Vacination overall scenarios
+n.vx.scenario <- 3
+vx.scenarios.mat <- matrix(NA, nrow=n.vx.scenario, ncol=6)
+colnames(vx.scenarios.mat) <- c("index","name.vx", "vx_y.vals", "start.date.vx","vx.coverage","delay.start.65.vx")
+vx.scenarios.mat[,"index"] <- c(1:n.vx.scenario)
+vx.scenarios.mat[,"name.vx"] <- c("vx.FAST","vx.EXPECTED","vx.SLOW")
+vx.scenarios.mat[,"vx_y.vals"] <- c("nvx_y_FAST","nvx_y","nvx_y_SLOW")
+vx.scenarios.mat[,"start.date.vx"] <- c("2020-09-01","2020-12-16","2021-02-16") #c("2020-12-16","2021-01-15","2020-03-01")
+vx.scenarios.mat[,"vx.coverage"] <- c(.8,.8,.8)
+vx.scenarios.mat[,"delay.start.65.vx"] <- c("10","30","90")
+
+vx.scenarios.mat <- rbind(vx.scenarios.mat,vx.scenarios.mat)
+vx.scenarios.mat[,"index"] <- c(1:6)
+vx.scenarios.mat[,"vx.coverage"] <- c(rep(.8,3),rep(.6,3))
+vx.scenarios.mat[,"name.vx"] <- paste(vx.scenarios.mat[,"name.vx"], ".coverage", vx.scenarios.mat[,"vx.coverage"], sep = "")
+
+# vx.scenarios.mat <- rbind(vx.scenarios.mat,vx.scenarios.mat)
+# vx.scenarios.mat[,"index"] <- c(1:6)
+# vx.scenarios.mat[,"vx.coverage"] <- c(rep(1,3),rep(.25,3))
+# vx.scenarios.mat[,"name.vx"] <- paste(vx.scenarios.mat[,"name.vx"], ".coverage", vx.scenarios.mat[,"vx.coverage"], sep = "")
+
+
+## Vaccination 65+ rate scenarios
+# n.protect.scenario <- 3
+# protect.scenarios.mat <- matrix(NA, nrow=n.protect.scenario, ncol=5)
+# colnames(protect.scenarios.mat) <- c("index","protect.name","start.date.65","n.days.65.vx","vx.coverage.65")
+# protect.scenarios.mat[,"index"] <- c(1:n.protect.scenario)
+# protect.scenarios.mat[,"protect.name"] <- c("Alpha_t.EARLY","Alpha_t.EXP","Alpha_t.LATE")
+# protect.scenarios.mat[,"start.date.65"] <- c("2020-12-16","2020-12-16","2020-12-16") #c("2020-12-16","2021-01-15","2020-03-01")
+# protect.scenarios.mat[,"n.days.65.vx"] <- c(5,75,300)
+# protect.scenarios.mat[,"vx.coverage.65"] <- c(1,.75,.1)
+
+## NPI scenarios
+# NPI.scenarios.mat <- matrix(NA, nrow=3, ncol=3)
+# colnames(NPI.scenarios.mat) <- c("index","NPI.name","Beta_y_vals")
+# NPI.scenarios.mat[,"index"] <- c(1:3)
+# NPI.scenarios.mat[,"NPI.name"] <- c("NPI.Bad","NPI.Obs", "NPI.Good")  #c("NPI.Obs","NPI.Mod","NPI.None")
+# NPI.scenarios.mat[,"Beta_y_vals"] <- c("Beta_y_HIGH", "Beta_y", "Beta_y_LOW" )  #c("Beta_y","Beta_y_moderate","Beta_y_nothing")
+# NPI.scenarios.mat <- as.data.frame(NPI.scenarios.mat)
+# NPI.scenarios.mat
+
+mu.scenario.in <- seq(0.1,.9,by=.1) #seq(0.1,.6,by=.25)
+
+##################################################
+## Run the scenarios
+start_time = 45
+num.to.run = 50
+ABC.out.mat.scenarios = ABC.out.mat[c(1:num.to.run),]
+iter=10
+time.steps <- last.date.plot.Vx - as.Date("2020-03-01") + 50
+vx.delay <- 20
+
+correlated.param.SCENARIOS.out <- correlated.param.SCENARIOS( ABC.out.mat=ABC.out.mat.scenarios, iter=iter, time.steps=time.steps, 
+                                                  vx.scenarios.mat=vx.scenarios.mat, 
+                                                  mu.scenario.in=mu.scenario.in, 
+                                                  X.mat=X.mat, freq.PREV.q=freq.PREV.q, freq.LAC.obs.age=freq.LAC.obs.age,
+                                                  logit.SEIR.est=logit.SEIR.est, psi.mat=psi.mat, vx.delay=vx.delay)
+
+traj.CI <- correlated.param.SCENARIOS.out
+# traj.CI.1 <- correlated.param.SCENARIOS.out
+# traj.CI.05 <- correlated.param.SCENARIOS.out 
+# traj.CI.025 <- correlated.param.SCENARIOS.out 
+# 
+# traj.CI <- rbind(traj.CI.1, traj.CI.05, traj.CI.025)
+
+##################################################
+## Plot the scenarios
+
+
+
+data.in <- latest_data %>% select(c("D","I_detect_new"))
+endDatePlot=last.date.plot.Vx
+startDatePlot.in <- "2020-10-01"
+#vars.to.plot <- c("Vx.given","Itot","Htot","D","R0_t")
+vars.to.plot <- c("Vx.given","Vx.given.tot","Vx.given.65","Vx.given.65.tot", "Itot","I_detect_new", "Htot","D","R0_t")
+
+data.plot.grid <- traj.CI %>% filter(vx.coverage.id==0.8) %>% filter(R0.id > 0.8) %>% filter(R0.id < 2.7)
+filter.scenarios <- NULL
+
+plot.SCENARIOS.ALL <-  plot.SCENARIOS(traj.CI=data.plot.grid, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
+#plot.SCENARIOS.ALL
+
+# filter.scenarios=c(4:9)
+# plot.SCENARIOS.filter <-  plot.SCENARIOS(traj.CI=traj.CI, data.in=data.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
+# 
+# if (print.output==TRUE){
+#   pdf(file = path(output.dir, "plot.scenarios.OUT.ALL.pdf"), width=10, height =10)
+#   plot.SCENARIOS.ALL
+#   dev.off()
+#   
+#   pdf(file = path(output.dir, "plot.scenarios.OUT.filter.pdf"), width=10, height =10)
+#   plot.SCENARIOS.filter
+#   dev.off()
+# }
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+##################################################
+## Plot the scenario policies to run
+
+# plot.scenarios.in <- plot.SCENARIOS.input(ABC_out=ABC_out, 
+#                                           NPI.scenarios.mat=NPI.scenarios.mat,
+#                                           protect.scenarios.mat=protect.scenarios.mat, 
+#                                           weighted.avg.scenarios=weighted.avg.scenarios.overall, 
+#                                           endDatePlot=endDatePlot)
+# if (print.output==TRUE){
+#   pdf(file = path(output.dir, "plot.scenarios.IN.NPI.pdf"), width=10, height =10)
+#   plot.scenarios.in[[1]]
+#   dev.off()
+#   
+#   pdf(file = path(output.dir, "plot.scenarios.IN.Protect.pdf"), width=10, height =10)
+#   plot.scenarios.in[[2]]
+#   dev.off()
+# }
+
+
+
+```
+
+
+## Plotting scenarios: Lines together {.tabset}
+
+### All variables
+
+Selected variables from scenarios in which R(t) $\in (1,2.4)$ 
+
+```{r}
+plot.SCENARIOS.ALL
+
+```
+
+### Individual variable
+
+Hospitalizations: Scenarios with R(t) from 1 to 2.5
+
+```{r include=FALSE, eval=TRUE}
+vars.to.plot <- "Htot"
+y.max.in <- 14000
+startDatePlot <- "2020-11-01"
+chart.title <- "Hospitalizations: Scenarios with R(t) from 1 to 2.5"
+plot.scenarios.single.state <- plot.together.noribbon(traj.CI=data.plot.grid , data.in=NULL, endDatePlot=endDatePlot, vars.to.plot=vars.to.plot, y.lab.in=vars.to.plot, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=NULL, plot.annotations=NULL, startDatePlot=startDatePlot)
+plot.scenarios.single.state
+
+```
+
+```{r}
+plot.scenarios.single.state
+```
+
+{-}
+
+## Plotting scenarios: Heatmaps {.tabset}
+
+```{r include=FALSE, eval=TRUE}
+
+######################################################
+## R(t) vs. vx.id
+## DOES NOT require filter.coverage
+
+data <- traj.CI
+var.to.plot <- "Htot"
+y.var <- "R0.id"
+x.var <- "vx.id"
+plot.title <- "Vaccination Rate at coverage % vs. R(t)"
+filter.coverage <- 0
+filter.65.delay <- 0
+#scale.x.labels <- c(vx.FAST="Fast", vx.EXPECTED="Expected", vx.SLOW="Slow" )
+scale.x.labels <- apply(expand.grid(c("Fast ", "Expected ","Slow "), c("80%","60%")) , 1, paste, collapse="")
+names(scale.x.labels) <- unique(data[,x.var])
+#scale.x.lables <- as.character(scale.x.labels)
+
+R0vsRate <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels)
+
+######################################################
+## R(t) vs. delay start 65+
+## Requires filter.coverage
+
+data <- traj.CI
+var.to.plot <- "D"
+y.var <- "R0.id"
+x.var <- "delay.start.65.vx.id"
+plot.title <- "80% Coverage"
+filter.coverage <- 0.8
+filter.65.delay <- 0
+# Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+
+R0vsDelaySt_coverage.8 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+
+plot.title <- "60% Coverage"
+data <- traj.CI
+var.to.plot <- "D"
+y.var <- "R0.id"
+x.var <- "delay.start.65.vx.id"
+filter.coverage <- 0.6
+filter.65.delay <- 0
+# Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+
+R0vsDelaySt_coverage.6 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+
+
+######################################################
+## R(t) vs. coverage %
+## Requires filter.65.delay
+
+data <- traj.CI
+var.to.plot <- "D"
+y.var <- "R0.id"
+x.var <- "vx.coverage.id"
+plot.title <- "Fast Rate"
+filter.coverage <- 0
+filter.65.delay <- 10
+# Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+
+R0vsCoverage.Fast <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+
+data <- traj.CI
+var.to.plot <- "D"
+y.var <- "R0.id"
+x.var <- "vx.coverage.id"
+plot.title <- "Expected Rate"
+filter.coverage <- 0
+filter.65.delay <- 30
+# Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+
+R0vsCoverage.Expected <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+
+```
+
+### Comparing all scenarios: Vaccination rate vs. R(t) 
+
+(Peak hospitalizations)
+
+```{r}
+R0vsRate
+```
+
+
+### Vaccination coverage vs. R(t) 
+
+(Total Deaths by June)
+
+```{r}
+R0vsCoverage.Fast + R0vsCoverage.Expected + plot_layout(guides = "collect")
+```
+
+
+### Delay in start of vaccinating 65+ vs R(t) 
+
+(Total Deaths by June)
+
+```{r}
+R0vsDelaySt_coverage.8 + R0vsDelaySt_coverage.6 + plot_layout(guides = "collect")
+```
+
+
+
