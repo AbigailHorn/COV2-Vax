@@ -4,4 +4,4 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-[website](https://uscbiostats.github.io/COVID19/)
+[website](https://abigailhorn.github.io/COV2-Vax/)

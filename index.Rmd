@@ -504,9 +504,9 @@ sero.scenario.in <- c(1, 0.5, 0.01)
 ##################################################
 ## Run the scenarios
 start_time = 45
-num.to.run = 2
+num.to.run = 20
 ABC.out.mat.scenarios = ABC.out.mat[c(1:num.to.run),]
-iter=50
+iter=20
 time.steps <- last.date.plot.Vx - as.Date("2020-03-01") + 5
 vx.delay <- 20
 fn_t_readin_input = "fn_t_readin.csv"
@@ -632,11 +632,13 @@ plot.SCENARIOS.ALL
 
 ```
 
+<!---
 ### Single plot: Individual variable
 
 Hospitalizations Timeseries
+---> 
 
-```{r include=FALSE, eval=TRUE}
+```{r, eval=FALSE, inclue=FALSE}
 vars.to.plot <- "Htot"
 y.max.in <- 14000
 startDatePlot <- "2020-11-01"
@@ -646,7 +648,7 @@ plot.scenarios.single.state <- plot.together.noribbon(traj.CI=traj.CI , data.in=
 
 ```
 
-```{r}
+```{r, eval=FALSE, inclue=FALSE}
 plot.scenarios.single.state
 ```
 
@@ -729,9 +731,9 @@ sero.scenario.in <- c(1, 0.5, 0.01)
 ##################################################
 ## Run the scenarios
 start_time = 45
-num.to.run = 2
+num.to.run = 20
 ABC.out.mat.scenarios = ABC.out.mat[c(1:num.to.run),]
-iter=50
+iter=20
 time.steps <- last.date.plot.Vx - as.Date("2020-03-01") + 5
 vx.delay <- 20
 fn_t_readin_input = "fn_t_readin_EARLY.csv"
@@ -859,11 +861,15 @@ plot.SCENARIOS.ALL
 
 ```
 
+<!---
+
 ### Single plot: Individual variable
 
 Hospitalizations Timeseries
 
-```{r include=FALSE, eval=TRUE}
+--->
+
+```{r, eval=FALSE, inclue=FALSE}
 vars.to.plot <- "Htot"
 y.max.in <- 14000
 startDatePlot <- "2020-11-01"
@@ -873,7 +879,7 @@ plot.scenarios.single.state
 
 ```
 
-```{r}
+```{r, eval=FALSE, inclue=FALSE}
 plot.scenarios.single.state
 ```
 
