@@ -1,12 +1,9 @@
-## Prior parameter distributions
 
-# vx0 <- 0
-# vx1 <- 1000
-# vx2 <- 5000
-# vx3 <- 1000
-# vx4 <- 0
+## Efficacy delay
 
 vx.delay <- 20
+
+## Prior parameter distributions
 
 prior.st <- c("unif",44,46)
 
@@ -15,7 +12,7 @@ prior.R0 <- c("normal",R0,.03)
 
 R0_redux1 <- .21
 R0_redux2 <- .33
-R0_redux3 <- .6#.6 #65
+R0_redux3 <- .575#.6 #65
 
 prior.R0.redux1 <- c("unif", R0_redux1 - 0.05, R0_redux1 + 0.05)
 prior.R0.redux2 <- c("unif", R0_redux2 - 0.05, R0_redux2 + 0.05)
@@ -46,7 +43,7 @@ prior.Delta2 <- c("normal",Delta2, stdev)#.001)
 prior.Alpha2 <- c("normal",Alpha2, stdev)#.001)
 prior.Kappa2 <- c("normal",Kappa2, stdev)#.002)
 
-p_V <- 0.25 #.28
+p_V <- 0.27 #.28
 prior.p_V <- c("normal",p_V, stdev) # c("unif", p_V-0.1, p_V+0.5 ) #c("normal",p_V, 0.08)
 
 prior.par <- list(
@@ -67,3 +64,4 @@ prior.par <- list(
 
 ## TIME-VARYING FUNCTIONS ARE READ IN VIA:
 ## fn_t_readin_path <- path(data.dir, "fn_t_readin.csv")
+

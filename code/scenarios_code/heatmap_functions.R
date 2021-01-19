@@ -66,11 +66,14 @@
 
 #heatmap.coverage.1 + heatmap.coverage.025 + plot_layout(guides = "collect")
 
-plot_heatmap <- function(data, x.var, y.var, var.to.plot, filter.coverage, filter.65.delay, plot.title, scale.x.labels=NULL){
+plot_heatmap <- function(data, x.var, y.var, var.to.plot, filter.coverage, filter.65.delay, plot.title, scale.x.labels=NULL, scale.y.labels=NULL){
   
   if (!is.null(scale.x.labels)){
     scale.x.labels.in <- scale.x.labels
     #c(vx.FAST="Fast", vx.EXPECTED="Expected", vx.SLOW="Slow" )
+  }
+  if (!is.null(scale.y.labels)){
+    scale.y.labels.in <- scale.y.labels
   }
   
   longnames <- c("Peak Obs. Infected",
@@ -140,8 +143,11 @@ plot_heatmap <- function(data, x.var, y.var, var.to.plot, filter.coverage, filte
   if (y.var == "R0.id"){
     p <- p + scale_y_discrete(name = "R(t) Scenario") #, labels = c(NPI.Bad = "3", NPI.Obs = "2", NPI.Good = "1.3"))
   }
+  if (y.var == "sero.id"){
+    p <- p + scale_y_discrete(name = "% Recovered (Sero+) Vaccinated", labels = percent(scale.y.labels.in))
+  }
   if (x.var == "vx.id"){
-    p <- p +  scale_x_discrete(name = "Vaccination rate", labels=scale.x.labels.in)
+    p <- p +  scale_x_discrete(name = "Vaccination rate")
   }
   if (x.var == "vx.coverage.id"){
     p <- p + scale_x_discrete( name = "Vax % Uptake", labels= percent(data$vx.coverage.id))

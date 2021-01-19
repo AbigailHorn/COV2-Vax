@@ -55,7 +55,7 @@ nvx_logic_check <- function(nvx_t,nvx_y,vx.delay,vx.coverage,delay.start.65.vx){
   
   ##################################################
   ## Implementing logic check: nvx_65_y.feas    
-#  start.vx <- round(as.numeric(as.Date(start.date.vx) - as.Date("2020-03-01")) + start_time) + vx.delay - 1  # This relates start time to the one in vx.scenarios.mat, not the one in fn_t_readin
+  #  start.vx <- round(as.numeric(as.Date(start.date.vx) - as.Date("2020-03-01")) + start_time) + vx.delay - 1  # This relates start time to the one in vx.scenarios.mat, not the one in fn_t_readin
   
   # This start date for vaccines overall is tied to the vax rate and date scenarios read-in via fn_t_readin
   if (sum(nvx_y.feas)==0){
@@ -75,7 +75,7 @@ nvx_logic_check <- function(nvx_t,nvx_y,vx.delay,vx.coverage,delay.start.65.vx){
     }
     
     for (time in (1 + start.vx + delay.start.65.vx):length(nvx_65_y.feas)){
-     
+      
       # This is the offset factor: the total # vax given before 65+ start
       n.vx.when.65.start <- nvx_y.feas_cum[start.vx+delay.start.65.vx]
       
@@ -216,7 +216,7 @@ get.CI.SCENARIOS <- function(TEST.out) {
     up_50 = quantile(value,.75,na.rm=TRUE),
     low_50 = quantile(value,.25,na.rm=TRUE)),
     #by = c("date","scenario.id",  "protect.id", "NPI.id")]#,"vx.id", "vx.coverage.id", "vx.start.date.id", "protect.id","NPI.id")]
-    by = c("date", "state.name","scenario.id","vx.id", "vx.coverage.id", "vx.start.date.id", "delay.start.65.vx.id","R0.id")]
+    by = c("date", "state.name","scenario.id","vx.id", "vx.start.date.id", "delay.start.65.vx.id", "sero.id", "R0.id")]
   traj.CI <- as.data.frame(traj.CI)
   
   ## TO ALIGN DATES: MODEL
@@ -235,7 +235,7 @@ get.CI.SCENARIOS <- function(TEST.out) {
 ## NOTE: Protect scenarios are called in from weighted.avg.protect.mat
 ########################################################################################
 
-correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat, iter, time.steps, vx.scenarios.mat, mu.scenario.in,
+correlated.param.SCENARIOS <- function(fn_t_readin_input=fn_t_readin_input, ABC.out.mat, iter, time.steps, vx.scenarios.mat, sero.scenario.in, mu.scenario.in,
                                        X.mat=X.mat, freq.PREV.q=freq.PREV.q, freq.LAC.obs.age=freq.LAC.obs.age, logit.SEIR.est=logit.SEIR.est, psi.mat=psi.mat,
                                        vx.delay=vx.delay){
   ## Number of scenarios
@@ -247,7 +247,7 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
   
   start_time = 45
   
-  fn_t_readin_path <- path(data.dir, "fn_t_readin.csv")
+  fn_t_readin_path <- path(data.dir, fn_t_readin_input)
   fn_t_readin = as.data.frame(read.csv(fn_t_readin_path, sep=",",stringsAsFactors = FALSE))
   
   ## Get r_t
@@ -267,7 +267,7 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
   
   Alpha_t_dates <- as.Date(alpha_t_readin$Alpha_t)
   Alpha_t_dates[1] <- Alpha_t_dates[1]-start_time
-  #Alpha_t_dates <- Alpha_t_dates[1:length(Alpha_t_dates)-1]
+  Alpha_t_dates <- Alpha_t_dates[1:length(Alpha_t_dates)-1]
   Alpha_t <- round(as.numeric(Alpha_t_dates - as.Date("2020-03-01")) + start_time)
   
   ## Get Alpha Kappa Delta until last estimated date (i.e. before forward scenario starts)
@@ -322,7 +322,7 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
   nvx_t <- round(as.numeric(nvx_t_dates - as.Date("2020-03-01")) + start_time)
   
   start.date.vx <- nvx_t_dates[3]
-    
+  
   #nvx_t <- nvx_t + vx.delay
   
   # print(nvx_t_dates)
@@ -334,6 +334,11 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
   SCENARIOS.out <- vector("list", n.scenarios)
   scenario.idx <- 1
   
+  for (sero.idx in 1:length(sero.scenario.in)){
+    
+    frac.sero.vax = sero.scenario.in[sero.idx]
+    
+    print(paste0("frac.sero.vax", frac.sero.vax))
   
   for (NPI.idx in 1:length(mu.scenario.in)){
     
@@ -373,7 +378,7 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
       
       # Coverage for 65+ is same as for overall population (can modify this)
       vx.coverage.65 <- vx.coverage
-
+      
       # Get dates during which intervention is run for 65+ and accounting for vx.delay
       nvx_65_y.feas <- nvx_ty_out[,3]
       nvx_65_y.feas.cum <- cumsum(nvx_65_y.feas)
@@ -553,9 +558,8 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
         R0_save <- round(mu.scenario*3.5,1)
         
         ## BIND INCLUDING OFFSETING OBSERVED DATA BY START DATE
-        TEST.out[[idx]] <- cbind(data.frame(scenario.id = paste0(scenario.idx, "_", name.vx, "_Rt.", R0_save ) , vx.id = name.vx, vx.start.date.id=start.date.vx, vx.coverage.id = vx.coverage, delay.start.65.vx.id = delay.start.65.vx, R0.id = R0_save, par.id = idx, date = -start_time+TEST$step), TEST)
-        #TEST.out[[idx]] <- cbind(data.frame(scenario.id = scenario.idx, protect.id = protect.name, NPI.id = NPI.name, par.id = idx, date = -start_time+TEST$step), TEST)
-        
+        TEST.out[[idx]] <- cbind(data.frame(scenario.id = paste0(scenario.idx, "_", name.vx, "_sero+", frac.sero.vax) , vx.id = name.vx, vx.start.date.id=start.date.vx, delay.start.65.vx.id = delay.start.65.vx, sero.id=frac.sero.vax, R0.id = R0_save, par.id = idx, date = -start_time+TEST$step), TEST)
+        #TEST.out[[idx]] <- cbind(data.frame(scenario.id = paste0(scenario.idx, "_", name.vx, "_Rt.", R0_save ) , vx.id = name.vx, vx.start.date.id=start.date.vx, vx.coverage.id = vx.coverage, delay.start.65.vx.id = delay.start.65.vx, R0.id = R0_save, par.id = idx, date = -start_time+TEST$step), TEST)
         
       }  # end over idx
       
@@ -576,6 +580,7 @@ correlated.param.SCENARIOS <- function(frac.sero.vax=frac.sero.vax, ABC.out.mat,
       
     } # end over y NPI.scenario
   } # end over x protect.scenario protect.idx
+} # end over sero.scenario.in
   
   # Output
   all.scenarios <- do.call(rbind,SCENARIOS.out)
@@ -620,8 +625,8 @@ plot.SCENARIOS <- function(traj.CI, data.in, startDatePlot, endDatePlot, vars.to
   }
   
   ## PLOTTING
-  traj.CI.line <- reshape2::melt(traj.CI[c("date","scenario.id",  "vx.id", "R0.id", "state.name", "median")], id.vars = c("date", "scenario.id",  "vx.id", "R0.id","state.name"))
-  traj.CI.area <- reshape2::melt(traj.CI[c("date","scenario.id",  "vx.id", "R0.id", "state.name", "low_95", "low_50", "up_50", "up_95")], id.vars = c("date", "scenario.id",  "vx.id", "R0.id","state.name"))
+  traj.CI.line <- reshape2::melt(traj.CI[c("date","scenario.id",  "vx.id", "sero.id", "R0.id", "state.name", "median")], id.vars = c("date", "scenario.id",  "vx.id","sero.id", "R0.id","state.name"))
+  traj.CI.area <- reshape2::melt(traj.CI[c("date","scenario.id",  "vx.id", "sero.id", "R0.id", "state.name", "low_95", "low_50", "up_50", "up_95")], id.vars = c("date", "scenario.id",  "vx.id", "sero.id", "R0.id","state.name"))
   traj.CI.area$type <- sapply(traj.CI.area$variable, function(x) {str_split(x, "_")[[1]][1]})
   traj.CI.area$CI <- sapply(traj.CI.area$variable, function(x) {str_split(x, "_")[[1]][2]})
   traj.CI.area$variable <- NULL

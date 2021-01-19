@@ -7,7 +7,7 @@
 ## Read and process the data
 
 latest_covid_data <- function(truncate=0){
-  cum_file <- sort(dir_ls(data.dir, regexp = "cum_counts_"), decreasing = TRUE)[1]
+  cum_file <- sort(dir_ls(data.dir, regexp = "cum_counts21_"), decreasing = TRUE)[1]
   latest_data = t(read.csv(cum_file, sep=",",stringsAsFactors = FALSE))
   colnames<-c("Htotcum","D","Vcum","Idetectcum","H_new","D_new","I_detect_new","V_new")
   nvars <- ncol(latest_data)
@@ -194,9 +194,6 @@ correlated.param.SIM <- function(ABC.out.mat,vx.delay,vx.coverage,iter,time.step
       }
     }
     # max_nvx <- max(cumsum(nvx_y.feas))
-    
-
-    
     
     # print("Beta_t_dates")
     # print(Beta_t_dates)

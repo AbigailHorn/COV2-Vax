@@ -9,10 +9,10 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="University of Southern California, Department of Preventive Medicine" />
+<meta name="author" content="Abigail Horn" />
 
 
-<title>Vaccination scenario analysis</title>
+<title>Evaluating vaccination policy proposal: Vaccinate only seronegative</title>
 
 <script src="site_libs/header-attrs-2.3/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -378,9 +378,9 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Vaccination scenario analysis</h1>
-<h3 class="subtitle">Epidemic model fit to LAC data as of 2020-12-24</h3>
-<h4 class="author">University of Southern California, Department of Preventive Medicine</h4>
+<h1 class="title toc-ignore">Evaluating vaccination policy proposal: Vaccinate only seronegative</h1>
+<h3 class="subtitle">Based on epidemic model fit to LAC data as of 2021-01-18</h3>
+<h4 class="author">Abigail Horn</h4>
 
 </div>
 
@@ -392,23 +392,11 @@ div.tocify {
 <!--Simulate model-->
 <!--Get compartment variables over time with CI-->
 <!--Get CFR/IFR-->
-<div id="model-and-parameter-estimates" class="section level1">
-<h1>Model and parameter estimates</h1>
-<div id="estimated-epidemic-parameters" class="section level2 tabset">
-<h2 class="tabset">Estimated epidemic parameters</h2>
-<div id="reproductive-number-rt" class="section level3">
-<h3>Reproductive Number, <span class="math inline">\(R(t)\)</span></h3>
-<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="912" /></p>
-</div>
-<div id="fraction-of-observed-infections-rt" class="section level3">
-<h3>Fraction of Observed Infections, <span class="math inline">\(r(t)\)</span></h3>
-<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="912" /></p>
-<p>{-}</p>
-</div>
-</div>
+<div id="model-calibration" class="section level1">
+<h1>Model calibration</h1>
 <div id="model-fits" class="section level2 tabset">
 <h2 class="tabset">Model fits</h2>
-<p>Summarizes the epidemic model fit with COVID-19 data for LAC from March 1 through 2020-12-13 for all disease states across multiple views: New cases, representing new daily incidence; the current number in a compartment at a specific date, relevant for understanding current prevalence rates and comparing with healthcare capacity limitations; and cumulative counts until a specific date. Observed data for available compartments with cases attributable to nursing home residents removed, are plotted as black dots. The figure demonstrates that good model fits are achieved in all compartments across time.</p>
+<p>Summarizes the epidemic model fit with COVID-19 data for LAC from March 1 through 2021-01-14 for all disease states across multiple views: New cases, representing new daily incidence; the current number in a compartment at a specific date, relevant for understanding current prevalence rates and comparing with healthcare capacity limitations; and cumulative counts until a specific date. Observed data for available compartments with cases attributable to nursing home residents removed, are plotted as black dots. The figure demonstrates that good model fits are achieved in all compartments across time.</p>
 <ul>
 <li><strong>New = new daily incidence</strong></li>
 <li><strong>Current = current census in compartment</strong></li>
@@ -416,26 +404,20 @@ div.tocify {
 <li>Black dots depict COVID-19 data, with counts from outbreaks in nursing homes removed</li>
 <li>The dashed line represents healthcare resource capacity limits</li>
 </ul>
-<div id="model-fits-through-2020-12-24" class="section level3">
-<h3>Model fits through 2020-12-24</h3>
-<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" width="912" /></p>
+<div id="model-fits-through-2021-01-18" class="section level3">
+<h3>Model fits through 2021-01-18</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="912" /></p>
 </div>
 <div id="model-projections" class="section level3">
 <h3>Model <strong>projections</strong></h3>
-<p>Projections <strong>under the assumption of the infectious rate as of 2020-12-24</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="912" /></p>
+<p>Projections <strong>under the assumption of the infectious rate as of 2021-01-18</strong></p>
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" width="912" /></p>
 </div>
 </div>
 </div>
 <div id="vaccination-scenarios" class="section level1">
 <h1>Vaccination Scenarios</h1>
-<p>Parameters modeled in scenarios:</p>
-<ul>
-<li>R(t) implemented from 2020-12-26 on: From 0.3 to 2.8</li>
-<li>Vaccination rate: slow (5,000/day initially, 10,000/day after June), expected (20,000/day), fast (50,000/day)</li>
-<li>Delay between starting vaccination (2020-12-15) and starting vaccination of 65+: 10, 30, 90 days</li>
-<li>Vaccine coverage rate (% final updake by population): 60%, 80%</li>
-</ul>
+<p><strong>Evaluation of proposed policy: Vaccinate only those that are sero negative (susceptible)</strong></p>
 <!---
 Get Alpha Kappa Delta table
 --->
@@ -448,39 +430,85 @@ Calculate prevalence of each profile in overall LAC population
 <!---
 Estimate risk probabilities with baseline from epidemic model
 --->
+</div>
+<div id="vaccination-scenarios-realistic-timeline" class="section level1">
+<h1>Vaccination Scenarios: Realistic timeline</h1>
+<p>Parameters modeled in scenarios:</p>
+<ul>
+<li><span class="math inline">\(R(t) = 1.9\)</span> – value estimated as of 2021-01-18</li>
+<li>Vaccination starting date: 12-15-20 (from LA Times)</li>
+<li>Vaccination rate 12-15-20 to 1-20-21: 8500 vaccines given per day (from LA Times)</li>
+<li>Vaccination rate 1-20-21 – on: 0, 10k, 20k, 30k, 40k, 50k vaccines given per day</li>
+<li>Date 65+ group starts vaccination: 2-1-21 (as promised)</li>
+<li>Vaccine coverage rate in 65+ (% final updake by population): 88% (from Understanding America Study)</li>
+<li><strong>Sero+ vaccination scenarios considered: 0%, 50%, 100% of recovered (sero+) individuals are (unnecessarily) vaccinated</strong></li>
+</ul>
 <!---
-Scenarios: Get Alpha, Kappa, Delta with populations protected
+Scenarios: Sero+ included
 --->
-<div id="plotting-scenarios-lines-together" class="section level2 tabset">
-<h2 class="tabset">Plotting scenarios: Lines together</h2>
-<div id="all-variables" class="section level3">
-<h3>All variables</h3>
-<p>Selected variables from scenarios in which R(t) <span class="math inline">\(\in (1,2.4)\)</span></p>
+<div id="scenario-output-heatmaps" class="section level2 tabset">
+<h2 class="tabset">Scenario output: Heatmaps</h2>
+<div id="vaccination-rate-vs.-sero-vaccinated-total-deaths" class="section level3">
+<h3>Vaccination rate vs. % Sero+ Vaccinated: Total Deaths</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="912" /></p>
+</div>
+<div id="vaccination-rate-vs.-sero-vaccinated-total-hospitalizations" class="section level3">
+<h3>Vaccination rate vs. % Sero+ Vaccinated: Total Hospitalizations</h3>
 <p><img src="index_files/figure-html/unnamed-chunk-15-1.png" width="912" /></p>
 </div>
-<div id="individual-variable" class="section level3">
-<h3>Individual variable</h3>
-<p>Hospitalizations: Scenarios with R(t) from 1 to 2.5</p>
-<p><img src="index_files/figure-html/unnamed-chunk-17-1.png" width="912" /></p>
+</div>
+<div id="scenario-output-timeseries" class="section level2 tabset">
+<h2 class="tabset">Scenario output: Timeseries</h2>
+<div id="faceted-plot-all-variables-shows-scenario-inputs" class="section level3">
+<h3>Faceted plot: All variables (shows scenario inputs)</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" width="912" /></p>
+</div>
+<div id="single-plot-individual-variable" class="section level3">
+<h3>Single plot: Individual variable</h3>
+<p>Hospitalizations Timeseries</p>
+<p><img src="index_files/figure-html/unnamed-chunk-18-1.png" width="912" /></p>
 <p>{-}</p>
 </div>
 </div>
-<div id="plotting-scenarios-heatmaps" class="section level2 tabset">
-<h2 class="tabset">Plotting scenarios: Heatmaps</h2>
-<div id="comparing-all-scenarios-vaccination-rate-vs.-rt" class="section level3">
-<h3>Comparing all scenarios: Vaccination rate vs. R(t)</h3>
-<p>(Peak hospitalizations)</p>
-<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" width="912" /></p>
 </div>
-<div id="vaccination-coverage-vs.-rt" class="section level3">
-<h3>Vaccination coverage vs. R(t)</h3>
-<p>(Total Deaths by June)</p>
-<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="912" /></p>
+<div id="vaccination-scenarios-11-1-20-start-date" class="section level1">
+<h1>Vaccination Scenarios: 11-1-20 start date</h1>
+<p>This <strong>counterfactual</strong> vaccination scenario can be seen as modeling the effect size of the proposed vaccination policy of no sero+ individuals under a different epidemic context – further from herd immunity at start of vaccination intervention.</p>
+<p>Parameters modeled in scenarios:</p>
+<ul>
+<li><span class="math inline">\(R(t) = 1.9\)</span> – value estimated as of 2021-01-18</li>
+<li><strong>Vaccination starting date: 11-1-20</strong></li>
+<li>Vaccination rate 11-1-20 to 12-07-20: 8500 vaccines given per day</li>
+<li>Vaccination rate 12-07-21 – on: 0, 10k, 20k, 30k, 40k, 50k vaccines given per day</li>
+<li>Date 65+ group starts vaccination: 36 days after start (12-7-20)</li>
+<li>Vaccine coverage rate in 65+ (% final updake by population): 88% (from Understanding America Study)</li>
+<li><strong>Sero+ vaccination scenarios considered: 0%, 50%, 100% of recovered (sero+) individuals are (unnecessarily) vaccinated</strong></li>
+</ul>
+<!---
+Scenarios: Sero+ included
+--->
+<div id="scenario-output-heatmaps-1" class="section level2 tabset">
+<h2 class="tabset">Scenario output: Heatmaps</h2>
+<div id="vaccination-rate-vs.-sero-vaccinated-total-deaths-1" class="section level3">
+<h3>Vaccination rate vs. % Sero+ Vaccinated: Total Deaths</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="912" /></p>
 </div>
-<div id="delay-in-start-of-vaccinating-65-vs-rt" class="section level3">
-<h3>Delay in start of vaccinating 65+ vs R(t)</h3>
-<p>(Total Deaths by June)</p>
-<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="912" /></p>
+<div id="vaccination-rate-vs.-sero-vaccinated-total-hospitalizations-1" class="section level3">
+<h3>Vaccination rate vs. % Sero+ Vaccinated: Total Hospitalizations</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-23-1.png" width="912" /></p>
+</div>
+</div>
+<div id="scenario-output-timeseries-1" class="section level2 tabset">
+<h2 class="tabset">Scenario output: Timeseries</h2>
+<div id="faceted-plot-all-variables-shows-scenario-inputs-1" class="section level3">
+<h3>Faceted plot: All variables (shows scenario inputs)</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-24-1.png" width="912" /></p>
+</div>
+<div id="single-plot-individual-variable-1" class="section level3">
+<h3>Single plot: Individual variable</h3>
+<p>Hospitalizations Timeseries</p>
+<p><img src="index_files/figure-html/unnamed-chunk-26-1.png" width="912" /></p>
+<p>{-}</p>
 </div>
 </div>
 </div>
