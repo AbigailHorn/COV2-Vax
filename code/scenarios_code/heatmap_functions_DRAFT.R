@@ -431,7 +431,18 @@ plot.together.ribbon <- function(traj.CI=traj.CI, data.in=data.in, endDatePlot=e
   
 }
 
-
+data.in <- NULL
+traj.CI.save <- traj.CI
+vars.to.plot <- "D"
+y.max.in <- 40000
+y.lab.in <- "Hospitalizations"
+endDatePlot <- as.Date("2020-04-30")
+startDatePlot <- "2020-11-01"
+chart.title <- "Plot Together"
+plot.capacity = NULL
+plot.annotations = NULL
+plot.scenarios.single.state <- plot.together.ribbon(traj.CI=traj.CI, data.in=data.in, endDatePlot=endDatePlot, vars.to.plot=vars.to.plot, y.lab.in=y.lab.in, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=plot.capacity, plot.annotations=plot.annotations)
+plot.scenarios.single.state
 
 ########################################################################################################################
 ########################################################################################################################

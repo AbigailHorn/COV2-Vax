@@ -1,7 +1,7 @@
 ---
-title: "Policy evaluation: Vaccination targeting susceptibles only"
+title: "Evaluating vaccination policy proposal: Vaccinate only seronegative"
 subtitle: Based on epidemic model fit to LAC data as of `r Sys.Date()`
-author: "USC Department of Preventive Medicine, Division of Biostatistics"
+author: "Abigail Horn"
 output:
   html_document:
     css: styles.css
@@ -99,7 +99,7 @@ code.scenarios.dir=here("code/scenarios_code/")
 <!--Set global options-->
 
 ```{r options, include=FALSE}
-print.output <- TRUE
+print.output <- FALSE
 days.truncate <- 0
 endDatePlotGlobal <- as.Date("2021-01-31")
 last.date.plot.Vx <- as.Date("2021-01-20") + 100
@@ -213,7 +213,7 @@ traj.0 <- model.output.to.plot.SIM(ABC.out.mat=ABC.out.mat, vx.delay=vx.delay, v
 
 time.steps.4.plot = last.date.plot.Vx - as.Date("2020-03-01") +1
 data.in <- latest_data
-vars.to.plot <- vars.minus.Vx
+vars.to.plot <- vars.plus.Vx
 
 plot.all.variables.curr.date <- 
 plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0,  time.steps.4plot=time.steps.4.plot,
@@ -224,7 +224,7 @@ if (print.output==TRUE){
   plot.all.variables.curr.date
   dev.off()
 }
-plot.all.variables.curr.date
+#plot.all.variables.curr.date
 
 ```
 
@@ -245,18 +245,19 @@ Summarizes the epidemic model fit with COVID-19 data for LAC from March 1 throug
 ###################################################################################################
 ## Plot all variables current date
 
-time.steps.4.plot = as.numeric(as.Date("2021-01-20") - as.Date("2020-03-01") + 2)
+time.steps.4.plot = as.numeric(endDatePlotGlobal - as.Date("2020-03-01") + 2)
 data.in <- latest_data
-vars.to.plot <- vars.minus.Vx
+vars.to.plot <- vars.plus.Vx
 
 plot.all.variables.curr.date <- 
-plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot, vars.to.plot=vars.to.plot)
+plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot,
+                    vars.to.plot=vars.plus.Vx)
 
-#if (print.output==TRUE){
+if (print.output==TRUE){
   pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
   plot.all.variables.curr.date
   dev.off()
-#}
+}
 #plot.all.variables.curr.date
 
 ```
@@ -268,18 +269,18 @@ plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-
 
 time.steps.4.plot = as.numeric(as.Date(last.date.plot.Vx) - as.Date("2020-03-01") + 15)
 data.in <- latest_data
-vars.to.plot <- vars.minus.Vx
+vars.to.plot <- vars.plus.Vx
 
 plot.all.variables.vx.timeline <- 
 plot.model.data.all(traj.CI = traj.0, data.in = data.in, init.date.data = "2020-03-01", date.offset.4plot = 0, time.steps.4plot=time.steps.4.plot,
-                    vars.to.plot=vars.to.plot)
+                    vars.to.plot=vars.plus.Vx)
 
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "plot.all.variables.vx.timeline.pdf"), width=10, height =10)
+if (print.output==TRUE){
+  pdf(file = path(output.dir, "plot.all.variables.pdf"), width=10, height =10)
   plot.all.variables.vx.timeline
   dev.off()
-#}
-#plot.all.variables.vx.timeline
+}
+#plot.all.variables.plus.15.days
 ```
 
 ### Model fits through `r Sys.Date()`
@@ -302,6 +303,10 @@ plot.all.variables.vx.timeline
 
 
 
+
+# Vaccination Scenarios 
+
+**Evaluation of proposed policy: Vaccinate only those that are sero negative (susceptible)**
 
 <!---
 Get Alpha Kappa Delta table
@@ -449,22 +454,20 @@ source(calc_integrated_risk_model)
 
 # Vaccination Scenarios
 
-Evaluating targeting of susceptibles above recovereds, vs. speed of vaccination
+Parameters modeled in scenarios:
 
-Parameters fixed in scenarios:
+$R(t)$ scenarios (starting from 1-20-20 on):
 
-- $R(t) = 1.5$ -- value estimated as of `r Sys.Date()` 
+- $R(t) = 1.9$ -- value estimated as of `r Sys.Date()` 
+- $R(t) = 1.5$ -- a hypothetical reduced value
+- $R(t) = 2.5$ -- a hypothetical increased value
+
 - Vaccination starting date: 12-15-20 (from LA Times)
+- Vaccination rate 12-15-20 to 1-20-21: 8500 vaccines given per day (from LA Times)
+- Vaccination rate 1-20-21 -- on: 0, 10k, 20k, 30k, 40k, 50k vaccines given per day 
 - Date 65+ group starts vaccination: 2-1-21 (as promised)
-- Vaccine coverage rate in 65+ (% final updake by population): 88% (from Understanding America Study, USC Dornsife)
-- Vaccination rate 12-15-20 to 1-20-21: approximately 8500 vaccines given per day (from LA Times)
-
-Parameters varied in scenarios:
-
-- **Vaccination speed** first 100 days of Biden (1-20-21 - 4-30-21): 0, 10k, 20k, 30k, 40k, 50k vaccines given per day
-- **Vaccination targeting**: 0%, 50%, 100% targeting of true susceptibles (sero-negative) only for vaccination, where:
-  - 100% targeting means 100% of vaccines go first to true susceptibles (sero-negative) only
-  - 0% targeting means vaccines are given regardless of previous infection history)
+- Vaccine coverage rate in 65+ (% final updake by population): 88% (from Understanding America Study)
+- **Sero+ vaccination scenarios considered: 0%, 50%, 100% of recovered (sero+) individuals are (unnecessarily) vaccinated**
 
 <!---
 Scenarios: Sero+ included
@@ -481,9 +484,6 @@ Vx_generator <- odin::odin(path_Vx_model)
 scenarios_functions <- path(code.scenarios.dir, "scenarios_fun_sero_DIFF.R")
 source(scenarios_functions)
 
-scenarios_functions_ratio <- path(code.scenarios.dir, "scenarios_fun_sero_RATIO.R")
-source(scenarios_functions_ratio)
-
 heatmap_functions <- path(code.scenarios.dir, "heatmap_functions.R")
 source(heatmap_functions)
 
@@ -491,10 +491,10 @@ source(heatmap_functions)
 ## INPUTS for getting % removed for various scenarios
 
 start_time = 45
-num.to.run = 100
+num.to.run = 20
 ABC.out.mat.scenarios = ABC.out.mat[c(1:num.to.run),]
-iter=10
-time.steps <- last.date.plot.Vx - as.Date("2020-03-01")
+iter=5
+time.steps <- last.date.plot.Vx - as.Date("2020-03-01") + 5
 vx.delay <- 20
 fn_t_readin_input = "fn_t_readin.csv"
 
@@ -508,15 +508,15 @@ vx.scenarios.mat[,"index"] <- c(1:n.vx.scenario)
 vx.scenarios.mat[,"name.vx"] <- c("0", "10k", "20k", "30k", "40k","50k")
 vx.scenarios.mat[,"vx_y.vals"] <- c("nvx_y", "nvx_10k", "nvx_20k", "nvx_30k", "nvx_40k","nvx_50k")
 vx.scenarios.mat[,"vx.coverage"] <- rep(.88, n.vx.scenario)  
-vx.scenarios.mat[,"delay.start.65.vx"] <- rep(15, n.vx.scenario) 
+vx.scenarios.mat[,"delay.start.65.vx"] <- rep(36, n.vx.scenario) 
 
-#vx.scenarios.mat <- vx.scenarios.mat[c(1:3),]
+#vx.scenarios.mat <- vx.scenarios.mat[c(1:2),]
 
-mu.scenario.in <-  0.4 #c(.55,.42, .71) #seq(0.1,.9,by=.1) #seq(0.1,.6,by=.25)
-sero.scenario.in <- c(1, 0.5, .01) #c(1,.01)
+mu.scenario.in <-  c(.55,.42, .71) #seq(0.1,.9,by=.1) #seq(0.1,.6,by=.25)
+sero.scenario.in <- c(1, 0.5, 0.01)
 
 ## Run the scenarios
-scenarios.out.realistic.ALL.diff <- correlated.param.SCENARIOS.ratio(fn_t_readin_input=fn_t_readin_input, ABC.out.mat=ABC.out.mat.scenarios, iter=iter, time.steps=time.steps, 
+scenarios.out.realistic.ALL.diff <- correlated.param.SCENARIOS.diff(fn_t_readin_input=fn_t_readin_input, ABC.out.mat=ABC.out.mat.scenarios, iter=iter, time.steps=time.steps, 
                                                              vx.scenarios.mat=vx.scenarios.mat, 
                                                              sero.scenario.in=sero.scenario.in,
                                                              mu.scenario.in=mu.scenario.in, 
@@ -525,9 +525,11 @@ scenarios.out.realistic.ALL.diff <- correlated.param.SCENARIOS.ratio(fn_t_readin
 
 traj.CI <- scenarios.out.realistic.ALL.diff[[1]]
 traj.CI.diff <- scenarios.out.realistic.ALL.diff[[2]]
-traj.CI.ratio <- scenarios.out.realistic.ALL.diff[[3]]
 
 ```
+
+
+
 
 
 <!---
@@ -535,7 +537,7 @@ Heatmaps
 --->
 
 
-```{r include=FALSE}
+```{r}
 
 var.to.plot <- "D"
 #y.var <- "R0.id"
@@ -543,47 +545,48 @@ y.var <- "sero.id"
 x.var <- "vx.id"
 scale.x.labels=NULL
 scale.y.labels <- c(0, 0.5, 1)
-#rep.0 = NULL
+rep.0 = NULL
 plot.0 = TRUE
-rep.0 = TRUE
 
-plot.title <- "Cumulative Deaths" # After Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
+plot.title <- "Total Deaths: Vax Rate vs. % Sero Negative Vax Comparison"
+filter.coverage <- 0
+filter.65.delay <- 0
 
-data.0 <- traj.CI %>% filter(vx.id==0 & sero.id==1)
-data.rest <- traj.CI %>% filter(vx.id!=0)
-data <- rbind(data.0,data.rest)
+plot.title <- "R(t) = 1.9"
+data <- traj.CI %>% filter(R0.id==1.9)
+R0vsRate.D.1.9 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.9
 
-#data <- traj.CI
+plot.title <- "R(t) = 1.5"
+data <- traj.CI %>% filter(R0.id==1.5)
+R0vsRate.D.1.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.5
 
-R0vsRate.D <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
-#R0vsRate.D
-
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_TOT_D.pdf"), width=10, height =10)
-  R0vsRate.D
-  dev.off()
-#}
+plot.title <- "R(t) = 2.5"
+data <- traj.CI %>% filter(R0.id==2.5)
+R0vsRate.D.2.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.2.5
 
 ```
 
-```{r include=FALSE}
+```{r}
 
 var.to.plot <- "Htotcum"
-plot.title <- "Cumulative Hospitalizations" # After Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
+plot.title <- "Total Hospitalizations: Vax Rate vs. % Sero Negative Vax Comparison"
 
-data.0 <- traj.CI %>% filter(vx.id==0 & sero.id==1)
-data.rest <- traj.CI %>% filter(vx.id!=0)
-data <- rbind(data.0,data.rest)
+plot.title <- "R(t) = 1.9"
+data <- traj.CI %>% filter(R0.id==1.9)
+R0vsRate.Htotcum.1.9 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.9
 
-R0vsRate.Htotcum <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
-#R0vsRate.Htotcum
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_TOT_H.pdf"), width=10, height =10)
-  R0vsRate.Htotcum
-  dev.off()
-#}
+plot.title <- "R(t) = 1.5"
+data <- traj.CI %>% filter(R0.id==1.5)
+R0vsRate.Htotcum.1.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.5
+
+plot.title <- "R(t) = 2.5"
+data <- traj.CI %>% filter(R0.id==2.5)
+R0vsRate.Htotcum.2.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
 
 ```
 
@@ -592,7 +595,7 @@ R0vsRate.Htotcum <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot 
 Differences
 --->
 
-```{r include=FALSE}
+```{r}
 
 var.to.plot <- "D"
 #y.var <- "R0.id"
@@ -601,167 +604,106 @@ x.var <- "vx.id"
 scale.x.labels=NULL
 scale.y.labels <- c(0, 0.5, 1)
 rep.0 = NULL
-plot.0 = NULL
+plot.0 = TRUE
 
-plot.title <- "Lives SAVED \n relative to no vaccination" # During Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
-data <- traj.CI.diff
+plot.title <- "Total Deaths: Vax Rate vs. % Sero Negative Vax Comparison"
+filter.coverage <- 0
+filter.65.delay <- 0
 
-DIFF.R0vsRate.D <-  plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0,round.by=0)
-#DIFF.R0vsRate.D
+plot.title <- "R(t) = 1.9"
+data <- traj.CI.diff %>% filter(R0.id==1.9)
+DIFF.R0vsRate.D.1.9 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.9
 
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_DIFF_D.pdf"), width=10, height =10)
-  DIFF.R0vsRate.D
-  dev.off()
-#}
+plot.title <- "R(t) = 1.5"
+data <- traj.CI.diff %>% filter(R0.id==1.5)
+DIFF.R0vsRate.D.1.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.5
 
-```
-
-```{r include=FALSE}
-
-var.to.plot = "Htotcum"
-plot.title <- "Hospitalizations AVERTED \n relative to no vaccination" # During Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
-data <- traj.CI.diff
-DIFF.R0vsRate.Htotcum <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0, round.by = 2)
-#DIFF.R0vsRate.Htotcum
-
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_DIFF_H2.pdf"), width=10, height =10)
-  DIFF.R0vsRate.Htotcum
-  dev.off()
-#}
+plot.title <- "R(t) = 2.5"
+data <- traj.CI.diff %>% filter(R0.id==2.5)
+DIFF.R0vsRate.D.2.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.2.5
 
 ```
 
-<!--- 
-Ratios
---->
-
-```{r include=FALSE}
-
-var.to.plot <- "D"
-y.var <- "sero.id"
-x.var <- "vx.id"
-scale.x.labels=NULL
-scale.y.labels <- c(0, 0.5, 1)
-rep.0 = NULL
-plot.0 = NULL
-round.by=2
-
-plot.title <- "Factor Increase in Lives Saved \n relative to no targeting and speed=10k" # During Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
-data <- traj.CI.ratio
-
-RATIO.R0vsRate.D <-  plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0,round.by=round.by)
-#RATIO.R0vsRate.D
-
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_RATIO_D.pdf"), width=10, height =10)
-  RATIO.R0vsRate.D
-  dev.off()
-#}
-
-```
-
-```{r include=FALSE}
+```{r}
 
 var.to.plot <- "Htotcum"
-y.var <- "sero.id"
-x.var <- "vx.id"
-scale.x.labels=NULL
-scale.y.labels <- c(0, 0.5, 1)
-rep.0 = NULL
-plot.0 = NULL
-round.by=2
 
-plot.title <- "Factor Increase in Hospitalizations Averted \n relative to no targeting and speed=10k" # During Biden's 1st 100 Days: \n With and Without Sero-status Targeting"
-data <- traj.CI.ratio
+plot.title <- "R(t) = 1.9"
+data <- traj.CI.diff %>% filter(R0.id==1.9)
+DIFF.R0vsRate.Htotcum.1.9 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.9
 
-RATIO.R0vsRate.Htotcum <-  plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, plot.title = plot.title,
-                           scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0,round.by=round.by)
-#RATIO.R0vsRate.Htotcum
+plot.title <- "R(t) = 1.5"
+data <- traj.CI.diff %>% filter(R0.id==1.5)
+DIFF.R0vsRate.Htotcum.1.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
+#R0vsRate.D.1.5
 
-#if (print.output==TRUE){
-  pdf(file = path(output.dir, "sero_RATIO_H.pdf"), width=10, height =10)
-  RATIO.R0vsRate.Htotcum
-  dev.off()
-#}
+plot.title <- "R(t) = 2.5"
+data <- traj.CI.diff %>% filter(R0.id==2.5)
+DIFF.R0vsRate.Htotcum.2.5 <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels,scale.y.labels=scale.y.labels,rep.0=rep.0,plot.0=plot.0)
 
 ```
 
-<br>
-<br>
 
-## Comparing Targeting vs. Speed {.tabset}
+## Scenario output: Heatmaps {.tabset}
 
-### Deaths: Targeting vs. Speed
-
-**Lives saved: Differences from no vaccination**
-
-```{r}
-
-DIFF.R0vsRate.D
-```
-
-<br>
-<br>
-
-**Factor increase in lives saved relative to no targeting and speed = 10k**
-
-```{r}
-
-RATIO.R0vsRate.D
-```
-
-<br>
-<br>
-
-**Totals**
-
-```{r}
-
-R0vsRate.D
-```
-
-
-
-
-### Hospitalizations: Targeting vs. Speed
+### Total Deaths: Vaccination rate vs. % Sero+ Vaccinated
 
 **Differences from no vaccination**
 
 ```{r}
-
-DIFF.R0vsRate.Htotcum
+DIFF.R0vsRate.D.1.9 + DIFF.R0vsRate.D.1.5 + DIFF.R0vsRate.D.2.5
 ```
 
-<br>
-<br>
-
-**Factor increase in hospitalizations averted relative to no targeting and speed = 10k**
+**Totals**
 
 ```{r}
-
-RATIO.R0vsRate.Htotcum
+R0vsRate.D.1.9 + R0vsRate.D.1.5 + R0vsRate.D.2.5
 ```
 
-<br>
-<br>
 
-**Cumulative**
+### Total Hospitalizations: Vaccination rate vs. % Sero+ Vaccinated
+
+**Differences from no vaccination**
 
 ```{r}
-R0vsRate.Htotcum
+DIFF.R0vsRate.Htotcum.1.9 + DIFF.R0vsRate.Htotcum.1.5 + DIFF.R0vsRate.Htotcum.2.5
 ```
 
-<br>
-<br>
+**Totals**
 
-## Scenario timeseries {.tabset}
+```{r}
+R0vsRate.Htotcum.1.9 + R0vsRate.Htotcum.1.5 + R0vsRate.Htotcum.2.5
+```
 
-### Scenario inputs and selected outputs
+
+<!---
+
+### Peak Hospitalizations: Vaccination rate vs. % Sero+ Vaccinated
+
+**Differences from no vaccination**
+
+```{r}
+R0vsRate.Htot.DIFF
+```
+
+**Totals**
+
+```{r}
+R0vsRate.Htot
+```
+
+--->
+
+{-}
+
+
+## Scenario output: Timeseries {.tabset}
+
+### Faceted plot: All variables (shows scenario inputs)
 
 ```{r}
 ##################################################
@@ -775,15 +717,13 @@ startDatePlot.in <- "2020-10-01"
 #vars.to.plot <- c("Vx.given","Itot","Htot","D","R0_t")
 vars.to.plot <- c("Vx.given","Vx.given.tot","Vx.given.65","Vx.given.65.tot", "R_vx", "sero_vx", "Itot","I_detect_new", "Htot","D","R0_t","R_out")
 
+#data.plot.grid <- traj.CI %>% filter(vx.coverage.id==0.8) %>% filter(R0.id > 0.8) %>% filter(R0.id < 2.7)
+#filter.scenarios <- NULL
+
+data.plot.grid <- traj.CI %>% filter(R0.id==1.9)
 #filter.scenarios = c(1:6, 8:12, 14:18)
-filter.scenarios=NULL
 
-data.0 <- traj.CI %>% filter(vx.id==0 & sero.id==1)
-data.rest <- traj.CI %>% filter(vx.id!=0) #%>% filter(sero.id!=0.5) %>% filter(vx.id %in% c("10k","30k","50k"))
-data <- rbind(data.0,data.rest)
-#data <- traj.CI
-
-plot.SCENARIOS.ALL <-  plot.SCENARIOS(traj.CI=data, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
+plot.SCENARIOS.ALL <-  plot.SCENARIOS(traj.CI=traj.CI, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
 #plot.SCENARIOS.ALL
 
 ```
@@ -793,6 +733,40 @@ plot.SCENARIOS.ALL <-  plot.SCENARIOS(traj.CI=data, data.in=data.in, startDatePl
 plot.SCENARIOS.ALL
 
 ```
+
+<!---
+### Single plot: Individual variable
+
+Hospitalizations Timeseries
+
+
+```{r, eval=FALSE, inclue=FALSE}
+vars.to.plot <- "Htot"
+y.max.in <- 14000
+startDatePlot <- "2020-11-01"
+chart.title <- "Hospitalizations"
+plot.scenarios.single.state <- plot.together.noribbon(traj.CI=traj.CI , data.in=NULL, endDatePlot=endDatePlot, vars.to.plot=vars.to.plot, y.lab.in=vars.to.plot, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=NULL, plot.annotations=NULL, startDatePlot=startDatePlot)
+#plot.scenarios.single.state
+
+```
+
+```{r, eval=FALSE, inclue=FALSE}
+plot.scenarios.single.state
+```
+
+---> 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

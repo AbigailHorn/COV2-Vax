@@ -1,6 +1,72 @@
 
+# scenario.id
+# vx.id
+# vx.coverage.id
+# vx.start.date.id
+# delay.start.65.vx.id
+# NPI.id
 
-plot_heatmap <- function(data, x.var, y.var, var.to.plot, plot.title, scale.x.labels=NULL, scale.y.labels=NULL,rep.0=NULL,plot.0=NULL,round.by=-1){
+
+######################################################
+######################################################
+## R(t) vs. coverage %
+## Requires filter.65.delay
+# data <- traj.CI
+# var.to.plot <- "D"
+# y.var <- "R0.id"
+# x.var <- "vx.coverage.id"
+# plot.title <- "100% Vaccine Uptake"
+# filter.coverage <- 0
+# filter.65.delay <- 10
+# # Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+# 
+# out <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+# out
+
+
+######################################################
+## R(t) vs. delay start 65+
+## Requires filter.coverage
+
+# data <- traj.CI
+# var.to.plot <- "D"
+# y.var <- "R0.id"
+# x.var <- "delay.start.65.vx.id"
+# plot.title <- "100% Vaccine Uptake"
+# filter.coverage <- 0.8
+# filter.65.delay <- 0
+# # Come back to modify labels for the x.axis based on what I want to visualize (if it is always customized, make it customized)
+# 
+# out <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title)
+# out
+
+
+######################################################
+## R(t) vs. vx.id
+## DOES NOT require filter.coverage
+
+#testing <- traj.CI %>% filter(state.name=="Htot") %>% filter(date==max(date))
+
+# data <- traj.CI
+# var.to.plot <- "Htot"
+# y.var <- "R0.id"
+# x.var <- "vx.id"
+# plot.title <- "100% Vaccine Uptake"
+# filter.coverage <- 0
+# filter.65.delay <- 0
+# #scale.x.labels <- c(vx.FAST="Fast", vx.EXPECTED="Expected", vx.SLOW="Slow" )
+# scale.x.labels <- apply(expand.grid(c("Fast ", "Expected ","Slow "), c("80%","60%")) , 1, paste, collapse="")
+# names(scale.x.labels) <- unique(data[,x.var])
+# #scale.x.lables <- as.character(scale.x.labels)
+# 
+# out <- plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.to.plot = var.to.plot, filter.coverage = filter.coverage, filter.65.delay = filter.65.delay, plot.title = plot.title, scale.x.labels=scale.x.labels)
+# out
+
+
+
+#heatmap.coverage.1 + heatmap.coverage.025 + plot_layout(guides = "collect")
+
+plot_heatmap <- function(data, x.var, y.var, var.to.plot, filter.coverage, filter.65.delay, plot.title, scale.x.labels=NULL, scale.y.labels=NULL,rep.0=NULL,plot.0=NULL){
   
   if (!is.null(scale.x.labels)){
     scale.x.labels.in <- scale.x.labels
@@ -11,14 +77,14 @@ plot_heatmap <- function(data, x.var, y.var, var.to.plot, plot.title, scale.x.la
   }
   
   longnames <- c("Peak Obs. Infected",
-                 "Observed Infections",
+                 "Cum. Obs. Infected",
                  "Peak Tot. Infected",
-                 "Infections",
+                 "Cum. Tot. Infected",
                  "New in Hospital",
                  "Peak in Hospital",
-                 "Hospitalizations",
+                 "Cum. in Hospital",
                  "New Deaths",
-                 "Deaths",
+                 "Cum. Deaths",
                  "CFR",
                  "IFR")
   
@@ -61,22 +127,44 @@ plot_heatmap <- function(data, x.var, y.var, var.to.plot, plot.title, scale.x.la
   max.median <- max(data$median)
   min.median <- min(data$median)
   
+  if (filter.coverage!=0){
+    data <- data %>% filter(vx.coverage.id==filter.coverage)}
+  
+  if (filter.65.delay!=0){
+    data <- data %>% filter(delay.start.65.vx.id==filter.65.delay)}
+  
+  #data$NPI.id <- factor(data$NPI.id, c("NPI.Good","NPI.Obs","NPI.Bad"))
+  
+  #  try: label=coverage.id in aes()
+  
+  # ggplot(data, aes(x = factor(vx.id), y = factor(R0.id), fill = median))+
+  #   geom_tile() + 
+  #   geom_text(aes(label=round( median,-2 )  ), color="white" ) 
+  
   p <-   
     ggplot(data, aes(x = factor(data[,x.var]), y = factor(data[,y.var]), fill = median))+
     geom_tile() + 
-    geom_text(aes(label=round( median, round.by )  ), color="white", size=10 ) +
+    geom_text(aes(label=round( median,-1 )  ), color="white" ) +
     scale_fill_gradient(name=paste0(name.var.to.plot, "\n (Median)"), low = "blue", high = "red", limits = range(min.median,max.median)) + theme_minimal() +
-    theme(plot.title = element_text(size=22, hjust = 0.5), axis.title=element_text(size=20), axis.text.y = element_text(size=18), axis.text.x = element_text(size=18)) +
+    # scale_y_discrete(name = "R(t) Scenario", labels = c(NPI.Bad = "3", 
+    #                                                     NPI.Obs = "2", NPI.Good = "1.3")) +
+    # scale_x_discrete(name = "Vaccination rate", labels=c(vx.FAST="Fast", vx.EXPECTED="Expected", vx.SLOW="Slow" ))+
+    theme(plot.title = element_text(size=20, hjust = 0.5), axis.text.y = element_text(size=15), axis.text.x = element_text(size=15)) +
     labs(title = plot.title)
-  
   if (y.var == "R0.id"){
-    p <- p + scale_y_discrete(name = "R(t) Scenario")
+    p <- p + scale_y_discrete(name = "R(t) Scenario") #, labels = c(NPI.Bad = "3", NPI.Obs = "2", NPI.Good = "1.3"))
   }
   if (y.var == "sero.id"){
-    p <- p + scale_y_discrete(name = "TARGETING (of sero-)", labels = percent(scale.y.labels.in))
+    p <- p + scale_y_discrete(name = "% Recovered (Sero+) Vaccinated", labels = percent(scale.y.labels.in))
   }
   if (x.var == "vx.id"){
-    p <- p +  scale_x_discrete(name = "SPEED (vax/day)")
+    p <- p +  scale_x_discrete(name = "Vaccination rate")
+  }
+  if (x.var == "vx.coverage.id"){
+    p <- p + scale_x_discrete( name = "Vax % Uptake", labels= percent(data$vx.coverage.id))
+  }
+  if (x.var == "delay.start.65.vx.id"){
+    p <- p + scale_x_discrete( name = "Phase II Start Date")
   }
   
   p <- p + geom_vline(xintercept = 1:length(unique(data[,x.var]))+0.5, color = "white", size = 1)
@@ -84,7 +172,7 @@ plot_heatmap <- function(data, x.var, y.var, var.to.plot, plot.title, scale.x.la
   
 }
 
-
+ 
 
 
 

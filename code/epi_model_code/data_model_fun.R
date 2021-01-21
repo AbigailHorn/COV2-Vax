@@ -74,6 +74,24 @@ all.variables <-  c("S",
                        "R_vx",
                     "R0_t")
 
+vars.minus.Vx <- c("S",
+                   "I_detect_new",
+                   "I",
+                   "Idetectcum",
+                   "Itot",
+                   "Itotcum",
+                   "H_new",
+                   "Htot",
+                   "Htotcum",
+                   "Q",
+                   "Qcum",
+                   "V",
+                   "Vcum",
+                   "D_new",
+                   "D",
+                   "R_out"
+                   ) 
+
 vars.plus.Vx <- all.variables[c(1:(length(all.variables)-1))]
 vars.plus.Vx.Rt <- all.variables
 
