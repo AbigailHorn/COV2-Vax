@@ -493,9 +493,9 @@ source(heatmap_functions)
 ## INPUTS for getting % removed for various scenarios
 
 start_time = 45
-num.to.run = 100
+num.to.run = 5
 ABC.out.mat.scenarios = ABC.out.mat[c(1:num.to.run),]
-iter=10
+iter=5
 time.steps <- last.date.plot.Vx - as.Date("2020-03-01")
 vx.delay <- 20
 fn_t_readin_input = "fn_t_readin.csv"
@@ -838,12 +838,12 @@ R0vsRate.Htotcum
 
 ### Scenario inputs and selected outputs
 
-Visualizing vaccination output for scenarios representing combinations of:
+Visualizing selected scenarios representing combinations of:
 
 - speeds = 0 (no vaccination), 10,000/day (10k), 30,000/day (30k) 50,000/day (50k)
 - targeting = 0% (0), 50% (0.5), 100% (1)
 
-```{r}
+```{r include=FALSE}
 ##################################################
 ## Plot the scenarios
 
