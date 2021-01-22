@@ -382,7 +382,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Policy evaluation: Vaccination targeting susceptibles only</h1>
-<h3 class="subtitle">Based on epidemic model fit to LAC data as of 2021-01-20</h3>
+<h3 class="subtitle">Based on epidemic model fit to LAC data as of 2021-01-21</h3>
 <h4 class="author">USC Department of Preventive Medicine, Division of Biostatistics</h4>
 
 </div>
@@ -407,13 +407,13 @@ div.tocify {
 <li>Black dots depict COVID-19 data, with counts from outbreaks in nursing homes removed</li>
 <li>The dashed line represents healthcare resource capacity limits</li>
 </ul>
-<div id="model-fits-through-2021-01-20" class="section level3">
-<h3>Model fits through 2021-01-20</h3>
+<div id="model-fits-through-2021-01-21" class="section level3">
+<h3>Model fits through 2021-01-21</h3>
 <p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="912" /></p>
 </div>
 <div id="model-projections" class="section level3">
 <h3>Model <strong>projections</strong></h3>
-<p>Projections <strong>under the assumption of the infectious rate as of 2021-01-20</strong></p>
+<p>Projections <strong>under the assumption of the infectious rate as of 2021-01-21</strong></p>
 <p><img src="index_files/figure-html/unnamed-chunk-8-1.png" width="912" /></p>
 <!---
 Get Alpha Kappa Delta table
@@ -433,9 +433,11 @@ Estimate risk probabilities with baseline from epidemic model
 <div id="vaccination-scenarios" class="section level1">
 <h1>Vaccination Scenarios</h1>
 <p>Evaluating targeting of susceptibles above recovereds, vs. speed of vaccination</p>
+<div id="scenarios-run" class="section level2 tabset">
+<h2 class="tabset">Scenarios run</h2>
 <p>Parameters fixed in scenarios:</p>
 <ul>
-<li><span class="math inline">\(R(t) = 1.5\)</span> – value estimated as of 2021-01-20</li>
+<li><span class="math inline">\(R(t) = 1.5\)</span> – value estimated as of 2021-01-21</li>
 <li>Vaccination starting date: 12-15-20 (from LA Times)</li>
 <li>Date 65+ group starts vaccination: 2-1-21 (as promised)</li>
 <li>Vaccine coverage rate in 65+ (% final updake by population): 88% (from Understanding America Study, USC Dornsife)</li>
@@ -454,6 +456,19 @@ Estimate risk probabilities with baseline from epidemic model
 Scenarios: Sero+ included
 --->
 <!---
+Vaccination speeds
+--->
+<!---
+Vaccination targeting
+--->
+<div id="speed-of-vaccine-roll-out" class="section level3">
+<h3><strong>SPEED</strong> of Vaccine Roll-out</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" width="912" /></p>
+</div>
+<div id="targeting-those-that-are-susceptible" class="section level3">
+<h3><strong>TARGETING</strong> Those that are Susceptible</h3>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" width="912" /></p>
+<!---
 Heatmaps
 --->
 <!---
@@ -463,37 +478,57 @@ Differences
 Ratios
 --->
 <p><br> <br></p>
-<div id="comparing-targeting-vs.-speed" class="section level2 tabset">
-<h2 class="tabset">Comparing Targeting vs. Speed</h2>
+</div>
+</div>
+<div id="results-targeting-vs.-speed" class="section level2 tabset">
+<h2 class="tabset">Results: Targeting vs. Speed</h2>
 <div id="deaths-targeting-vs.-speed" class="section level3">
 <h3>Deaths: Targeting vs. Speed</h3>
 <p><strong>Lives saved: Differences from no vaccination</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-17-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="912" /></p>
 <p><br> <br></p>
 <p><strong>Factor increase in lives saved relative to no targeting and speed = 10k</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-18-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="912" /></p>
 <p><br> <br></p>
 <p><strong>Totals</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-23-1.png" width="912" /></p>
 </div>
 <div id="hospitalizations-targeting-vs.-speed" class="section level3">
 <h3>Hospitalizations: Targeting vs. Speed</h3>
 <p><strong>Differences from no vaccination</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-24-1.png" width="912" /></p>
 <p><br> <br></p>
 <p><strong>Factor increase in hospitalizations averted relative to no targeting and speed = 10k</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-21-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-25-1.png" width="912" /></p>
 <p><br> <br></p>
 <p><strong>Cumulative</strong></p>
-<p><img src="index_files/figure-html/unnamed-chunk-22-1.png" width="912" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-26-1.png" width="912" /></p>
 <p><br> <br></p>
 </div>
 </div>
-<div id="scenario-timeseries" class="section level2 tabset">
-<h2 class="tabset">Scenario timeseries</h2>
+<div id="results-epidemic-timeseries" class="section level2 tabset">
+<h2 class="tabset">Results: Epidemic timeseries</h2>
 <div id="scenario-inputs-and-selected-outputs" class="section level3">
 <h3>Scenario inputs and selected outputs</h3>
-<p><img src="index_files/figure-html/unnamed-chunk-24-1.png" width="912" /></p>
+<p>Visualizing vaccination output for scenarios representing combinations of:</p>
+<ul>
+<li>speeds = 0 (no vaccination), 10,000/day (10k), 30,000/day (30k) 50,000/day (50k)</li>
+<li>targeting = 0% (0), 50% (0.5), 100% (1)</li>
+</ul>
+<pre><code>## quartz_off_screen 
+##                 2</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-28-1.png" width="912" /></p>
+<!---
+
+### Single plot: Individual variable
+
+Hospitalizations Timeseries
+
+
+
+
+
+--->
 </div>
 </div>
 </div>

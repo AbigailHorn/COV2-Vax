@@ -451,6 +451,8 @@ source(calc_integrated_risk_model)
 
 Evaluating targeting of susceptibles above recovereds, vs. speed of vaccination
 
+## Scenarios run {.tabset}
+
 Parameters fixed in scenarios:
 
 - $R(t) = 1.5$ -- value estimated as of `r Sys.Date()` 
@@ -512,7 +514,7 @@ vx.scenarios.mat[,"delay.start.65.vx"] <- rep(15, n.vx.scenario)
 
 #vx.scenarios.mat <- vx.scenarios.mat[c(1:3),]
 
-mu.scenario.in <-  0.4 #c(.55,.42, .71) #seq(0.1,.9,by=.1) #seq(0.1,.6,by=.25)
+mu.scenario.in <-  0.41 #c(.55,.42, .71) #seq(0.1,.9,by=.1) #seq(0.1,.6,by=.25)
 sero.scenario.in <- c(1, 0.5, .01) #c(1,.01)
 
 ## Run the scenarios
@@ -527,6 +529,79 @@ traj.CI <- scenarios.out.realistic.ALL.diff[[1]]
 traj.CI.diff <- scenarios.out.realistic.ALL.diff[[2]]
 traj.CI.ratio <- scenarios.out.realistic.ALL.diff[[3]]
 
+```
+
+<!---
+Vaccination speeds
+--->
+
+```{r eval=TRUE, include=FALSE}
+
+data.in <- NULL # latest_data %>% select(c("D","I_detect_new"))
+endDatePlot=last.date.plot.Vx
+startDatePlot.in <- "2020-12-01"
+#vars.to.plot <- c("R_vx", "sero_vx", "R_out", "S")
+vars.to.plot <- c("Vx.given.65","Vx.given.65.tot","Vx.given","Vx.given.tot") # "Vx.given.65","Vx.given.65.tot") #"R_vx", "sero_vx"
+
+#filter.scenarios = c(1:6, 8:12, 14:18)
+filter.scenarios=NULL
+
+data.0 <- traj.CI %>% filter(sero.id==1)
+#data.rest <- traj.CI %>% filter(vx.id!=0) #%>% filter(sero.id!=0.5) %>% filter(vx.id %in% c("10k","30k","50k"))
+#data <- rbind(data.0,data.rest)
+data <- data.0
+
+plot.SCENARIOS.speeds <-  plot.SCENARIOS(traj.CI=data, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
+
+#plot.SCENARIOS.speeds
+
+pdf(file = path(output.dir, "plot.scenarios.speeds.pdf"), width=10, height =10)
+plot.SCENARIOS.speeds
+dev.off()
+
+```
+
+<!---
+Vaccination targeting
+--->
+
+```{r eval=TRUE, include=FALSE}
+
+data.in <- NULL # latest_data %>% select(c("D","I_detect_new"))
+endDatePlot=last.date.plot.Vx
+startDatePlot.in <- "2020-12-01"
+vars.to.plot <- c("R_vx", "sero_vx", "R_out", "S")
+#vars.to.plot <- c("Vx.given","Vx.given.tot", "Vx.given.65","Vx.given.65.tot") #"R_vx", "sero_vx"
+
+#filter.scenarios = c(1:6, 8:12, 14:18)
+filter.scenarios=NULL
+
+data.0 <- traj.CI %>% filter(vx.id=="50k") # || vx.id=="50k") #filter(scenario.id %in% c(target.0_10k, target.0.5_10k, target.1_10k, target.0_50k, target.0.5_50k, target.1_50k_))
+#data.rest <- traj.CI %>% filter(vx.id!=0) #%>% filter(sero.id!=0.5) %>% filter(vx.id %in% c("10k","30k","50k"))
+#data <- rbind(data.0,data.rest)
+data <- data.0
+
+plot.SCENARIOS.targeting <-  plot.SCENARIOS(traj.CI=data, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
+
+#plot.SCENARIOS.targeting
+
+pdf(file = path(output.dir, "plot.scenarios.targeting.pdf"), width=10, height =10)
+plot.SCENARIOS.targeting
+dev.off()
+
+```
+
+### **SPEED** of Vaccine Roll-out
+
+```{r}
+plot.SCENARIOS.speeds
+```
+
+
+### **TARGETING** Those that are Susceptible
+
+```{r}
+plot.SCENARIOS.targeting
 ```
 
 
@@ -694,7 +769,7 @@ RATIO.R0vsRate.Htotcum <-  plot_heatmap(data=data,x.var=x.var,y.var=y.var, var.t
 <br>
 <br>
 
-## Comparing Targeting vs. Speed {.tabset}
+## Results: Targeting vs. Speed {.tabset}
 
 ### Deaths: Targeting vs. Speed
 
@@ -759,9 +834,14 @@ R0vsRate.Htotcum
 <br>
 <br>
 
-## Scenario timeseries {.tabset}
+## Results: Epidemic timeseries {.tabset}
 
 ### Scenario inputs and selected outputs
+
+Visualizing vaccination output for scenarios representing combinations of:
+
+- speeds = 0 (no vaccination), 10,000/day (10k), 30,000/day (30k) 50,000/day (50k)
+- targeting = 0% (0), 50% (0.5), 100% (1)
 
 ```{r}
 ##################################################
@@ -773,18 +853,22 @@ data.in <- latest_data %>% select(c("D","I_detect_new"))
 endDatePlot=last.date.plot.Vx
 startDatePlot.in <- "2020-10-01"
 #vars.to.plot <- c("Vx.given","Itot","Htot","D","R0_t")
-vars.to.plot <- c("Vx.given","Vx.given.tot","Vx.given.65","Vx.given.65.tot", "R_vx", "sero_vx", "Itot","I_detect_new", "Htot","D","R0_t","R_out")
+vars.to.plot <- c("Vx.given","Vx.given.tot","R_vx", "sero_vx", "Itot","I_detect_new", "Htot","D","R0_t","R_out","S")
 
 #filter.scenarios = c(1:6, 8:12, 14:18)
 filter.scenarios=NULL
 
 data.0 <- traj.CI %>% filter(vx.id==0 & sero.id==1)
-data.rest <- traj.CI %>% filter(vx.id!=0) #%>% filter(sero.id!=0.5) %>% filter(vx.id %in% c("10k","30k","50k"))
+data.rest <- traj.CI %>% filter(vx.id!=0) %>% filter(vx.id!="20k") %>% filter(vx.id!="40k") #%>% filter(sero.id!=0.5) %>% filter(vx.id %in% c("10k","30k","50k"))
 data <- rbind(data.0,data.rest)
 #data <- traj.CI
 
 plot.SCENARIOS.ALL <-  plot.SCENARIOS(traj.CI=data, data.in=data.in, startDatePlot=startDatePlot.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, filter.scenarios=filter.scenarios)
 #plot.SCENARIOS.ALL
+
+pdf(file = path(output.dir, "plot.scenarios.all.pdf"), width=10, height =10)
+plot.SCENARIOS.ALL
+dev.off()
 
 ```
 
@@ -795,9 +879,30 @@ plot.SCENARIOS.ALL
 ```
 
 
+<!---
 
+### Single plot: Individual variable
 
+Hospitalizations Timeseries
 
+```{r, eval=FALSE, inclue=FALSE}
+vars.to.plot <- "D"
+y.max.in <- 22000
+startDatePlot <- "2020-12-01"
+chart.title <- "Vaccinations"
+
+data <- traj.CI #%>% filter(sero.idx=="0")
+
+plot.scenarios.single.state <- plot.together.noribbon(traj.CI=data , data.in=NULL, endDatePlot=endDatePlot, vars.to.plot=vars.to.plot, y.lab.in=vars.to.plot, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=NULL, plot.annotations=NULL, startDatePlot=startDatePlot)
+plot.scenarios.single.state
+
+```
+
+```{r, eval=FALSE, inclue=FALSE}
+plot.scenarios.single.state
+```
+
+--->
 
 
 

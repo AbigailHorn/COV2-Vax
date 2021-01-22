@@ -675,14 +675,14 @@ plot.SCENARIOS <- function(traj.CI, data.in, startDatePlot, endDatePlot, vars.to
   ### colors and names
   #####################
   
-  longnames <- c("Susceptible",
+  longnames <- c("Suscept.",
                  "New Obs. Infected",
                  "Current Obs. Infected",
                  "Cum. Obs. Infected",
                  "Current Tot. Infected",
                  "Cum. Tot. Infected",
                  "New in Hospital",
-                 "Current in Hospital",
+                 "in Hospital",
                  "Cum. in Hospital",
                  "Current in ICU",
                  "Cum. in ICU",
@@ -693,15 +693,15 @@ plot.SCENARIOS <- function(traj.CI, data.in, startDatePlot, endDatePlot, vars.to
                  "Recovered",
                  #"Total Vax",
                  #"New Vax",
-                 "Vax Recovered",
+                 "Tot.Vx Recov.",
                  "CFR",
                  "IFR",
-                 "R(t) Scenario",
-                 "New Vax",
-                 "Total Vax",
-                 "New Vax 65+",
-                 "Total Vax 65+",
-                 "Vax frac. Sero+")
+                 "R(t)",
+                 "New Vx",
+                 "Tot. Vax",
+                 "New Vx 65+",
+                 "Tot Vx 65+",
+                 "Vx.Frac.Recov")
   
   names(longnames) <- c("S",
                         "I_detect_new",

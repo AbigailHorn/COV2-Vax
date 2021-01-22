@@ -734,19 +734,19 @@ plot.SCENARIOS.ALL
 
 ```
 
-<!---
+
 ### Single plot: Individual variable
 
 Hospitalizations Timeseries
 
 
 ```{r, eval=FALSE, inclue=FALSE}
-vars.to.plot <- "Htot"
-y.max.in <- 14000
-startDatePlot <- "2020-11-01"
-chart.title <- "Hospitalizations"
+vars.to.plot <- "Vx.given.tot"
+y.max.in <- 1e7
+startDatePlot <- "2020-12-01"
+chart.title <- "Vaccinations"
 plot.scenarios.single.state <- plot.together.noribbon(traj.CI=traj.CI , data.in=NULL, endDatePlot=endDatePlot, vars.to.plot=vars.to.plot, y.lab.in=vars.to.plot, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=NULL, plot.annotations=NULL, startDatePlot=startDatePlot)
-#plot.scenarios.single.state
+plot.scenarios.single.state
 
 ```
 
@@ -754,8 +754,19 @@ plot.scenarios.single.state <- plot.together.noribbon(traj.CI=traj.CI , data.in=
 plot.scenarios.single.state
 ```
 
----> 
 
+
+```{r}
+  vars.to.plot <- c("Vx.given.tot")
+  data.in <- NULL
+  plot.capacity <- NULL
+  plot.annotations <- TRUE
+  y.max.in <- 0.8
+  y.lab.in <- "Probability"
+  chart.title <- "Population-Average Probabilities of Severe Illness"
+  AKD_t_plot <- plot.together.capacity(traj.CI=traj.CI, data.in=data.in, endDatePlot=endDatePlot, vars.to.plot = vars.to.plot, y.lab.in=y.lab.in, y.max.in=y.max.in, chart.title=chart.title, plot.capacity=plot.capacity, plot.annotations=plot.annotations)
+  AKD_t_plot
+```
 
 
 
